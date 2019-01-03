@@ -9,6 +9,8 @@ import random
 import cv2
 import torch as th
 
+KITTI_NUMBER_OF_VALIDATION_EXAMPLES = 58
+
 
 class Dataset(object):
     def __init__(self, examples_files, transforms=None):
@@ -166,18 +168,16 @@ class KittiDataset(Dataset):
             example_files['reflective_disparity_image'])
 
     @classmethod
-    def training_split(cls, dataset_folder, number_of_validation_examples=58):
+    def training_split(cls, dataset_folder):
         """Returns training and validation datasets.
 
-        Note, the splits are the same across the runs if
-        "number_of_validation_examples" is the same.
+        The function always generates same split. For validation
+        the function allocates 58 examples.
 
         Args:
             dataset_folder: folder that contains "data_stereo_flow"
                     folder with Kitti2012 dataset and "data_scene_flow"
                     folder with Kitti2015 dataset.
-            number_of_validation_examples: number of examples that will be
-                      used for validation.
         """
         examples = _kitti_find_examples(
             left_images_folder=os.path.join(dataset_folder, 'data_stereo_flow',
@@ -202,8 +202,8 @@ class KittiDataset(Dataset):
         # This garantee that splits will be same in a different runs.
         random.seed(0)
         random.shuffle(examples)
-        validation_examples = examples[0:number_of_validation_examples]
-        training_examples = examples[number_of_validation_examples:]
+        validation_examples = examples[0:KITTI_NUMBER_OF_VALIDATION_EXAMPLES]
+        training_examples = examples[KITTI_NUMBER_OF_VALIDATION_EXAMPLES:]
 
         return KittiDataset(training_examples), KittiDataset(
             validation_examples)
@@ -216,7 +216,6 @@ class KittiDataset(Dataset):
             dataset_folder: folder that contains "data_scene_flow"
                       folder with Kitti2015 dataset.
         """
-
         examples = _kitti_find_examples(
             left_images_folder=os.path.join(dataset_folder, 'data_scene_flow',
                                             'testing', 'image_2'),
@@ -232,7 +231,6 @@ class KittiDataset(Dataset):
             dataset_folder: folder that contains "data_stereo_flow"
                       folder with Kitti2012 dataset.
         """
-
         examples = _kitti_find_examples(
             left_images_folder=os.path.join(dataset_folder, 'data_stereo_flow',
                                             'testing', 'colored_0'),
