@@ -5,9 +5,10 @@
 
 import pkg_resources
 
-from practical_deep_stereo import datasets
+from practical_deep_stereo import kitti_dataset
 
-KITTI_ROOTPATH = pkg_resources.resource_filename(__name__, "data/kitti")
+FOLDER_WITH_FRAGMENT_OF_KITTI_DATASET = pkg_resources.resource_filename(
+    __name__, "data/kitti")
 
 
 def _mockup_transform(example):
@@ -35,9 +36,9 @@ def _check_test_example(example):
 
 
 def test_kitti_dataset():
-    datasets.KittiDataset.KITTI_NUMBER_OF_VALIDATION_EXAMPLES = 2
-    training_set, validation_set = datasets.KittiDataset.training_split(
-        KITTI_ROOTPATH)
+    kitti_dataset.Kitti.NUMBER_OF_VALIDATION_EXAMPLES = 2
+    training_set, validation_set = kitti_dataset.Kitti.training_split(
+        FOLDER_WITH_FRAGMENT_OF_KITTI_DATASET)
     training_set.transforms = [_mockup_transform]
     assert len(validation_set) == 2
 
@@ -48,7 +49,8 @@ def test_kitti_dataset():
     assert len(validation_set) == 1
 
     kitti2012_benchmark_set = \
-     datasets.KittiDataset.kitti2012_benchmark_datasetset(KITTI_ROOTPATH)
+        kitti_dataset.Kitti.kitti2012_benchmark(
+            FOLDER_WITH_FRAGMENT_OF_KITTI_DATASET)
     len(kitti2012_benchmark_set) == 2
     example = kitti2012_benchmark_set[1]
     _check_test_example(example)
