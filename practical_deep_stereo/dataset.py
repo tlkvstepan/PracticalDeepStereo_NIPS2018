@@ -35,7 +35,7 @@ class Dataset(object):
         if self._transforms is None:
             self._transforms = transforms
         else:
-            self._transforms = transforms
+            self._transforms += transforms
 
     def subsample(self, number_of_examples, random_seed=None):
         """Keeps "number_of_examples" examples in the dataset.

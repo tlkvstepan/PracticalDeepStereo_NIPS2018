@@ -57,6 +57,17 @@ EXAMPLES_WITH_RENDERING_ARTIFACTS = [
 NUMBER_OF_VALIDATION_EXAMPLES = 500
 MAXIMUM_DISPARITY_DURING_TRAINING = 255
 
+# Following constant is used to mask large disparities, during
+# evaluation according to "psm" protocol.
+MAXIMUM_DISPARITY_DURING_TEST = 192
+
+# Following constants are used to eliminate examples where many
+# pixels have large disparities, during evaluation according to
+# "crl" protocol.
+MAXIMUM_PERCENTAGE_OF_LARGE_DISPARITIES = 25.0
+LARGE_DISPARITY = 300.0
+RECOMPUTE_DISPARITY_STATISTICS = False
+
 
 def _read_pfm(filename):
     file = open(filename, 'rb')
@@ -65,19 +76,19 @@ def _read_pfm(filename):
     height = None
     scale = None
     endian = None
-    header = file.readline().rstrip()
+    header = file.readline().decode("utf-8").rstrip()
     if header == 'PF':
         color = True
     elif header == 'Pf':
         color = False
     else:
         raise Exception('Not a PFM file.')
-    dim_match = re.match(r'^(\d+)\s(\d+)\s$', file.readline())
+    dim_match = re.match(r'^(\d+)\s(\d+)\s$', file.readline().decode("utf-8"))
     if dim_match:
         width, height = map(int, dim_match.groups())
     else:
         raise Exception('Malformed PFM header.')
-    scale = float(file.readline().rstrip())
+    scale = float(file.readline().decode("utf-8").rstrip())
     if scale < 0:  # little-endian
         endian = '<'
         scale = -scale
@@ -87,11 +98,10 @@ def _read_pfm(filename):
     shape = (height, width, 3) if color else (height, width)
     data = np.reshape(data, shape)
     data = np.ascontiguousarray(np.flipud(data))
-    return data, scale
+    return data
 
 
-def _filter_out_examples_with_out_of_range_disparities(examples,
-                                                       maximum_disparity):
+def _filter_out_examples_with_large_disparities(examples):
     return [
         example for example in examples
         if (example['maximum_disparity'] <= MAXIMUM_DISPARITY_DURING_TRAINING
@@ -99,7 +109,7 @@ def _filter_out_examples_with_out_of_range_disparities(examples,
     ]
 
 
-def _filter_out_if_more_than_25_perc_have_disparity_larger_than_300(examples):
+def _filter_out_examples_with_too_many_large_disparities(examples):
     return [
         example for example in examples
         if not example['too_many_large_disparities']
@@ -171,10 +181,9 @@ def _get_disparity_statistics_filename(disparity_image_file):
     return disparity_image_file.split(".")[0] + '.txt'
 
 
-def _is_more_than_25_perc_of_pix_have_disparity_larger_than_300_pix(
-        disparity_image):
-    return ((disparity_image > 300.0).sum() * 100.0 / float(
-        disparity_image.size)) > 25.0
+def _is_too_many_large_disparities(disparity_image):
+    return ((disparity_image > LARGE_DISPARITY).sum() * 100.0 / float(
+        disparity_image.size)) > MAXIMUM_PERCENTAGE_OF_LARGE_DISPARITIES
 
 
 def _compute_disparity_statistics(disparity_image_file):
@@ -193,17 +202,17 @@ def _compute_disparity_statistics(disparity_image_file):
     """
     disparity_range_file = _get_disparity_statistics_filename(
         disparity_image_file)
-    if os.path.isfile(disparity_range_file):
+    if os.path.isfile(
+            disparity_range_file) and not RECOMPUTE_DISPARITY_STATISTICS:
         (minimum_disparity, maximum_disparity,
          too_many_large_disparities) = \
             np.loadtxt(disparity_range_file, dtype=np.int, unpack=True)
     else:
-        disparity_image = _read_pfm(disparity_image_file)[0]
+        disparity_image = _read_pfm(disparity_image_file)
         minimum_disparity = int(np.floor(disparity_image.min()))
         maximum_disparity = int(np.ceil(disparity_image.max()))
-        too_many_large_disparities = \
-            _is_more_than_25_perc_of_pix_have_disparity_larger_than_300_pix(
-                disparity_image)
+        too_many_large_disparities = _is_too_many_large_disparities(
+            disparity_image)
         np.savetxt(
             disparity_range_file,
             [minimum_disparity, maximum_disparity, too_many_large_disparities],
@@ -211,16 +220,16 @@ def _compute_disparity_statistics(disparity_image_file):
     return minimum_disparity, maximum_disparity, too_many_large_disparities
 
 
-def _find_examples(images_folder, disparity_images_folder):
+def _find_examples(dataset_folder):
     """Returns list with FlyingThings3D dataset examples.
 
     Note, that the function returns examples in the same order across
     different runs.
 
     Args:
-        images_folder: folder with left and right images;
-        disparity_images_folder: folder with disparity images for
-                                the left camera.
+        dataset_folder: folder with FlyingThings3D dataset, that contains
+                        "frames_cleanpass" folder with left and right
+                        images and "disparity" folder with disparities.
 
     Returns:
         List of examples, where each example is a dictionary
@@ -234,6 +243,8 @@ def _find_examples(images_folder, disparity_images_folder):
         (5) "too_many_large_disparities" flag that is set to "True" if
             more than 25% of pixels have disparity more than 300 pixels.
     """
+    images_folder = os.path.join(dataset_folder, 'frames_cleanpass')
+    disparity_images_folder = os.path.join(dataset_folder, 'disparity')
     folders_with_left_images = _folders_with_left_images(images_folder)
     examples = []
     for folder_index, folder_with_left_images in enumerate(
@@ -262,19 +273,23 @@ def _find_examples(images_folder, disparity_images_folder):
     return examples
 
 
-def _mask_disparities_less_than_0_and_more_than_192(example):
+def _mask_large_disparities(example):
     disparity_image = example['disparity_image']
-    out_of_range_mask = (disparity_image < 0) | (disparity_image > 192)
+    out_of_range_mask = ((disparity_image < 0) |
+                         (disparity_image > MAXIMUM_DISPARITY_DURING_TEST))
     disparity_image[out_of_range_mask] = float('inf')
+    return example
 
 
 class FlyingThings3D(dataset.Dataset):
+    """FlyingThings3D dataset."""
+
     def _read_disparity_image(self, example_files):
         disparity_image = _read_pfm(example_files['disparity_image'])
         return th.unsqueeze(th.from_numpy(disparity_image).float(), 0)
 
     @classmethod
-    def flyingthings_benchmark(cls, dataset_folder, is_psm_protocol):
+    def benchmark_dataset(cls, dataset_folder, is_psm_protocol):
         """Returns benchmark dataset.
 
         Args:
@@ -295,14 +310,12 @@ class FlyingThings3D(dataset.Dataset):
                              than 25% of pixels have disparity more than 300
                              pixels are excluded from the evaluation.
         """
-        examples = _find_examples(
-            os.path.join(dataset_folder, 'frames_cleanpass'),
-            os.path.join(dataset_folder, 'disparity'))
+        examples = _find_examples(dataset_folder)
         examples = _split_examples_into_training_and_test_sets(examples)[1]
         if is_psm_protocol:
-            transforms = [_mask_disparities_less_than_0_and_more_than_192]
+            transforms = [_mask_large_disparities]
             return FlyingThings3D(examples, transforms)
-        examples = _filter_out_if_more_than_25_perc_have_disparity_larger_than_300(
+        examples = _filter_out_examples_with_too_many_large_disparities(
             examples)
         return FlyingThings3D(examples)
 
@@ -324,18 +337,15 @@ class FlyingThings3D(dataset.Dataset):
                             "frames_cleanpass" folder with left and right
                             images and "disparity" folder with disparities.
         """
-        examples = _find_examples(
-            os.path.join(dataset_folder, 'frames_cleanpass'),
-            os.path.join(dataset_folder, 'disparity'))
+        examples = _find_examples(dataset_folder)
         # Manual random seed garantees that splits will be same in a
         # different runs.
         random.seed(0)
-        random.shuffle()
+        random.shuffle(examples)
         examples = _split_examples_into_training_and_test_sets(examples)[0]
         examples = _filter_out_examples_with_rendering_artifacts(examples)
-        examples = _filter_out_examples_with_out_of_range_disparities(examples)
-        training_examples = examples[:NUMBER_OF_VALIDATION_EXAMPLES]
-        validation_examples = examples[NUMBER_OF_VALIDATION_EXAMPLES:]
+        examples = _filter_out_examples_with_large_disparities(examples)
+        validation_examples = examples[:NUMBER_OF_VALIDATION_EXAMPLES]
+        training_examples = examples[NUMBER_OF_VALIDATION_EXAMPLES:]
         return FlyingThings3D(training_examples), FlyingThings3D(
             validation_examples)
-
