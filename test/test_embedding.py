@@ -12,5 +12,6 @@ def test_embedding_output_size():
     embedding_module = embedding.Embedding()
     th.manual_seed(0)
     image = th.rand(2, 3, 100, 100)
-    descriptor = embedding_module(image)
+    descriptor, redirect_connection = embedding_module(image)
     assert descriptor.size() == (2, 64, 25, 25)
+    assert redirect_connection.size() == (2, 8, 25, 25)

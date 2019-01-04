@@ -36,7 +36,7 @@ def _convolutional_block_5x5_stride_2(number_of_input_features,
 def _convolutional_block_3x3(number_of_input_features,
                              number_of_output_features):
     return nn.Sequential(
-        _convolution_3x3(number_of_output_features, number_of_output_features),
+        _convolution_3x3(number_of_input_features, number_of_output_features),
         nn.LeakyReLU(negative_slope=0.1, inplace=True),
         nn.InstanceNorm2d(number_of_output_features, affine=True))
 
@@ -59,31 +59,50 @@ class Embedding(nn.Module):
 
     def __init__(self,
                  number_of_input_features=3,
-                 number_of_features=64,
+                 number_of_embedding_features=64,
+                 number_of_redirect_features=8,
                  number_of_residual_blocks=2):
+        """Returns initialized embedding module.
+
+        Args:
+            number_of_input_features: number of channels in the input image;
+            number_of_embedding_features: number of channels in image's
+                                          descriptor;
+            number_of_redirect_features: number of channels in the redirect
+                                         connection descriptor;
+            number_of_residual_blocks: number of residual blocks in embedding
+                                       network.
+        """
         super(Embedding, self).__init__()
         embedding_modules = [
             _convolutional_block_5x5_stride_2(number_of_input_features,
-                                              number_of_features),
-            _convolutional_block_5x5_stride_2(number_of_features,
-                                              number_of_features),
+                                              number_of_embedding_features),
+            _convolutional_block_5x5_stride_2(number_of_embedding_features,
+                                              number_of_embedding_features),
         ]
         embedding_modules += [
-            _ResidualBlockWithPreactivation(number_of_features)
+            _ResidualBlockWithPreactivation(number_of_embedding_features)
             for _ in range(number_of_residual_blocks)
         ]
         self._embedding_modules = nn.ModuleList(embedding_modules)
+        self._redirect_modules = _convolutional_block_3x3(
+            number_of_embedding_features, number_of_redirect_features)
 
     def forward(self, image):
-        """Returns image's descriptor.
+        """Returns image's descriptor and redirect connection descriptor.
 
         Args:
             image: color image of size
                    batch_size x 3 x height x width;
+
+        Returns:
             descriptor: image's descriptor of size
-                        batch_size x 64 x height / 4 x width / 4.
+                        batch_size x 64 x (height / 4) x (width / 4);
+            redirect: redirect connection descriptor of size
+                      batch_size x 8 x (height / 4) x (width / 4).
         """
         descriptor = image
         for embedding_module in self._embedding_modules:
             descriptor = embedding_module(descriptor)
-        return descriptor
+
+        return descriptor, self._redirect_modules(descriptor)

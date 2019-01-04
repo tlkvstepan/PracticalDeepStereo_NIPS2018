@@ -1,0 +1,1 @@
+env PYTHONPATH=./practical_deep_stereo python -m pytest -v
