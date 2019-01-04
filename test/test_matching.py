@@ -25,3 +25,11 @@ def test_matching():
                                 [0, 2, 3, 4]]).reshape(1, 1, 3, 1, 4)
     network_output = network(left_embedding, right_embedding)
     assert np.all(np.isclose(network_output.data.numpy(), expected_output))
+
+
+def test_matching_operation_output_size():
+    th.manual_seed(0)
+    match_operation = matching.MatchingOperation()
+    concatenated_descriptors = th.rand(2, 128, 25, 25)
+    compact_matching_signature = match_operation(concatenated_descriptors)
+    assert compact_matching_signature.size() == (2, 8, 25, 25)
