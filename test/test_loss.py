@@ -21,6 +21,6 @@ def test_subpixel_cross_entropy():
         diversity=2.0, disparity_step=1)
     expected_cross_entropy = 1.3654
     assert np.isclose(
-        criterion(similarities, ground_truth_disparity).data[0],
+        criterion(similarities, ground_truth_disparity).item(),
         expected_cross_entropy,
         atol=1e-3)
