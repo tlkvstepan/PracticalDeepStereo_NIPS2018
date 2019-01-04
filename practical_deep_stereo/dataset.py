@@ -11,8 +11,31 @@ import torch as th
 
 class Dataset(object):
     def __init__(self, examples_files, transforms=None):
+        """Returns initialized Dataset object.
+
+        Args:
+            examples_files: list of examples.
+            transforms: list of the functions or objects with
+                        "_call_" method, that takes example as
+                        and input and return modified example.
+        """
         self._examples_files = examples_files
         self._transforms = transforms
+
+    def append_transforms(self, transforms):
+        """Adds transforms to the dataset.
+
+        Args:
+            transforms: list of the functions or objects with
+                        "_call_" method, that takes example as
+                        and input and return modified example.
+        """
+        if not isinstance(transforms, list):
+            raise ValueError('"transforms" should be a list.')
+        if self._transforms is None:
+            self._transforms = transforms
+        else:
+            self._transforms = transforms
 
     def subsample(self, number_of_examples, random_seed=None):
         """Keeps "number_of_examples" examples in the dataset.
