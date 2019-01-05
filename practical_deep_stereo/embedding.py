@@ -14,7 +14,7 @@ class Embedding(nn.Module):
     def __init__(self,
                  number_of_input_features=3,
                  number_of_embedding_features=64,
-                 number_of_redirect_features=8,
+                 number_of_shortcut_features=8,
                  number_of_residual_blocks=2):
         """Returns initialized embedding module.
 
@@ -22,7 +22,7 @@ class Embedding(nn.Module):
             number_of_input_features: number of channels in the input image;
             number_of_embedding_features: number of channels in image's
                                           descriptor;
-            number_of_redirect_features: number of channels in the redirect
+            number_of_shortcut_features: number of channels in the redirect
                                          connection descriptor;
             number_of_residual_blocks: number of residual blocks in embedding
                                        network.
@@ -39,8 +39,8 @@ class Embedding(nn.Module):
             for _ in range(number_of_residual_blocks)
         ]
         self._embedding_modules = nn.ModuleList(embedding_modules)
-        self._redirect_modules = modules.convolutional_block_3x3(
-            number_of_embedding_features, number_of_redirect_features)
+        self._shortcut = modules.convolutional_block_3x3(
+            number_of_embedding_features, number_of_shortcut_features)
 
     def forward(self, image):
         """Returns image's descriptor and redirect connection descriptor.
@@ -52,11 +52,13 @@ class Embedding(nn.Module):
         Returns:
             descriptor: image's descriptor of size
                         batch_size x 64 x (height / 4) x (width / 4);
-            redirect: redirect connection descriptor of size
-                      batch_size x 8 x (height / 4) x (width / 4).
+            shortcut_from_left_image: shortcut connection from left image
+                      descriptor (it is used in regularization network). It
+                      is tensor of size
+                      (batch_size, 8, height / 4, width / 4).
         """
         descriptor = image
         for embedding_module in self._embedding_modules:
             descriptor = embedding_module(descriptor)
 
-        return descriptor, self._redirect_modules(descriptor)
+        return descriptor, self._shortcut(descriptor)
