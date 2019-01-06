@@ -10,7 +10,6 @@ from practical_deep_stereo import modules
 
 
 class Matching(nn.Module):
-
     def __init__(self, maximum_disparity, operation):
         """Returns initialized matching module.
 
@@ -26,8 +25,7 @@ class Matching(nn.Module):
         self._pad = nn.ZeroPad2d((maximum_disparity, 0, 0, 0))
         self._operation = operation
 
-    def set_disparity(self, maximum_disparity):
-        """Change disparity range."""
+    def set_maximum_disparity(self, maximum_disparity):
         self._maximum_disparity = maximum_disparity
 
     def forward(self, left_embedding, right_embedding):
