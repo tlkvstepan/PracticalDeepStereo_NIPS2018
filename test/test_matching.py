@@ -1,4 +1,4 @@
-# © All rights reserved.
+# Copyrights. All rights reserved.
 # ECOLE POLYTECHNIQUE FEDERALE DE LAUSANNE, Switzerland,
 # Space Center (eSpace), 2018
 # See the LICENSE.TXT file for more details.
@@ -23,6 +23,11 @@ def test_matching():
         th.Tensor([3, 4, 2, 4]).view(1, 1, 1, 4))
     expected_output = np.array([[3, 4, 2, 4], [0, 3, 4, 2],
                                 [0, 2, 3, 4]]).reshape(1, 1, 3, 1, 4)
+    network_output = network(left_embedding, right_embedding)
+    assert np.all(np.isclose(network_output.data.numpy(), expected_output))
+    network.set_maximum_disparity(maximum_disparity=1)
+    expected_output = np.array([[3, 4, 2, 4], [0, 3, 4, 2]]).reshape(
+        1, 1, 2, 1, 4)
     network_output = network(left_embedding, right_embedding)
     assert np.all(np.isclose(network_output.data.numpy(), expected_output))
 

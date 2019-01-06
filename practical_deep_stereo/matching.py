@@ -9,6 +9,10 @@ import torch as th
 from practical_deep_stereo import modules
 
 
+def _pad_zero_columns_from_left(tensor, number_of_columns):
+    return nn.ZeroPad2d((number_of_columns, 0, 0, 0))(tensor)
+
+
 class Matching(nn.Module):
     def __init__(self, maximum_disparity, operation):
         """Returns initialized matching module.
@@ -22,7 +26,6 @@ class Matching(nn.Module):
         """
         super(Matching, self).__init__()
         self._maximum_disparity = maximum_disparity
-        self._pad = nn.ZeroPad2d((maximum_disparity, 0, 0, 0))
         self._operation = operation
 
     def set_maximum_disparity(self, maximum_disparity):
@@ -44,8 +47,8 @@ class Matching(nn.Module):
                                 [batch_index, feature_index, disparity_index,
                                  y, x].
         """
-        # Pad zeros from the left to the right embedding
-        padded_right_embedding = self._pad(right_embedding)
+        padded_right_embedding = _pad_zero_columns_from_left(
+            right_embedding, self._maximum_disparity)
         matching_signatures = []
         concatenated_embedding = th.cat([left_embedding, right_embedding],
                                         dim=1)
