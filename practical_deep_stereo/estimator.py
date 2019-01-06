@@ -3,12 +3,11 @@
 # Space Center (eSpace), 2018
 # See the LICENSE.TXT file for more details.
 
-from torch import nn
 from torch.nn import functional
 import torch as th
 
 
-class SubpixelMap(nn.Module):
+class SubpixelMap(object):
     """Approximation of an sub-pixel MAP estimator.
 
     In every location (x, y), function collects similarity scores
@@ -20,7 +19,7 @@ class SubpixelMap(nn.Module):
     It is used only for inference.
     """
 
-    def __init__(self, half_support_window, disparity_step):
+    def __init__(self, half_support_window=4, disparity_step=2):
         super(SubpixelMap, self).__init__()
         """Returns object of SubpixelMap class.
 
@@ -43,7 +42,7 @@ class SubpixelMap(nn.Module):
         self._disparity_step = disparity_step
         self._half_support_window = half_support_window
 
-    def forward(self, similarities):
+    def __call__(self, similarities):
         """Returns sub-pixel disparity.
 
         Args:
