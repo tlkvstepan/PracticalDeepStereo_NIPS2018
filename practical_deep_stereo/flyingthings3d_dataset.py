@@ -286,7 +286,7 @@ class FlyingThings3D(dataset.Dataset):
 
     def _read_disparity_image(self, example_files):
         disparity_image = _read_pfm(example_files['disparity_image'])
-        return th.unsqueeze(th.from_numpy(disparity_image).float(), 0)
+        return th.from_numpy(disparity_image).float()
 
     @classmethod
     def benchmark_dataset(cls, dataset_folder, is_psm_protocol):

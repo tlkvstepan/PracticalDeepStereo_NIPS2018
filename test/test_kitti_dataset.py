@@ -23,9 +23,9 @@ def _check_fields(example):
 
 def _check_training_example(example):
     _check_fields(example)
-    disparity_image, left_image = example['left_image'], example[
+    left_image, disparity_image = example['left_image'], example[
         'disparity_image']
-    assert len(disparity_image.size()) == 3
+    assert len(disparity_image.size()) == 2
     assert len(left_image.size()) == 3
 
 

@@ -58,7 +58,7 @@ class Dataset(object):
         return image.permute(2, 0, 1)
 
     def _read_disparity_image(self, example_files):
-        """Returns disparity_image with indices [0, y, x].
+        """Returns disparity_image with indices [y, x].
 
         The locations with unknown disparity are set to infinity. If example
         does not come with the "disparity_image" the function returns None.

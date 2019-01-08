@@ -102,7 +102,7 @@ class Kitti(dataset.Dataset):
         # Unknown disparities correspond to "0"s in the "disparity_image".
         disparity_unavaliable = disparity_image.eq(0)
         disparity_image[disparity_unavaliable] = float('inf')
-        return disparity_image.unsqueeze(0)
+        return disparity_image
 
     @classmethod
     def training_split(cls, dataset_folder):

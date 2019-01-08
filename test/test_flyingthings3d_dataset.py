@@ -21,7 +21,7 @@ def _check_example_items(example):
     assert 'right_image' in example
     disparity_image = example['disparity_image']
     left_image = example['left_image']
-    assert len(disparity_image.size()) == 3
+    assert len(disparity_image.size()) == 2
     assert len(left_image.size()) == 3
 
 
