@@ -15,7 +15,7 @@ def _unnormalized_laplace_probability(value, location, diversity):
 
 
 class SubpixelCrossEntropy(nn.Module):
-    def __init__(self, diversity, disparity_step):
+    def __init__(self, diversity=1.0, disparity_step=2):
         """Returns SubpixelCrossEntropy object.
 
         Args:
