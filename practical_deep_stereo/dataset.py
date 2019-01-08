@@ -67,6 +67,17 @@ class Dataset(object):
             '"_read_disparity_image" method should be implemented in'
             'a child class.')
 
+    def get_example(self, index):
+        if index >= len(self):
+            raise IndexError
+        example_files = self._examples_files[index]
+        example = {
+            'left_image': self._read_image(example_files['left_image']),
+            'right_image': self._read_image(example_files['right_image']),
+            'disparity_image': self._read_disparity_image(example_files)
+        }
+        return example
+
     def __getitem__(self, index):
         """Returns example by its index.
 
@@ -79,14 +90,7 @@ class Dataset(object):
             to "infinity". If example does not have the "disparity_image",
             the function returns only the "left_image" and the "right_image".
         """
-        if index >= len(self):
-            raise IndexError
-        example_files = self._examples_files[index]
-        example = {
-            'left_image': self._read_image(example_files['left_image']),
-            'right_image': self._read_image(example_files['right_image']),
-            'disparity_image': self._read_disparity_image(example_files)
-        }
+        example = self.get_example(index)
         if self._transforms is not None:
             for transform in self._transforms:
                 example = transform(example)
