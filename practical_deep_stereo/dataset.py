@@ -54,7 +54,9 @@ class Dataset(object):
 
     def _read_image(self, image_filename):
         """Returns image with indices [color_channel, y, x]."""
-        image = th.from_numpy(cv2.imread(image_filename, 1)).float()
+        # OpenCv imread produces BGR image.
+        image = cv2.cvtColor(cv2.imread(image_filename, 1), cv2.COLOR_BGR2RGB)
+        image = th.from_numpy(image).float()
         return image.permute(2, 0, 1)
 
     def _read_disparity_image(self, example_files):
