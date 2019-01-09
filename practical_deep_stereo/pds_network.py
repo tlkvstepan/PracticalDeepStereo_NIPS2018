@@ -62,25 +62,25 @@ class PdsNetwork(nn.Module):
 
     def __init__(self, maximum_disparity=255):
         super(PdsNetwork, self).__init__()
-        if (maximum_disparity + 1) % 64 != 0:
-            raise ValueError(
-                '"maximum_disparity" + 1 should be multiple of 64, e.g.,'
-                '"maximum disparity" can be equal to 63, 191, 255, 319...')
-        self._maximum_disparity = maximum_disparity
         self._size_adapter = _SizeAdapter()
         self._embedding = embedding.Embedding()
-        # During the embedding spatial dimensions of an input are downsampled
-        # 4x times. Therefore, "maximum_disparity" of matching module is
-        # computed as (maximum_disparity + 1) / 4 - 1.
         self._matching = matching.Matching(
             operation=matching.MatchingOperation(),
-            maximum_disparity=(maximum_disparity + 1) // 4 - 1)
+            maximum_disparity=0)
+        self.set_maximum_disparity(maximum_disparity)
         self._regularization = regularization.Regularization()
         self._estimator = estimator.SubpixelMap()
 
     def set_maximum_disparity(self, maximum_disparity):
         """Reconfigure network for different disparity range."""
-        self._maximum_disparity = (maximum_disparity + 1)
+        if (maximum_disparity + 1) % 64 != 0:
+            raise ValueError(
+                '"maximum_disparity" + 1 should be multiple of 64, e.g.,'
+                '"maximum disparity" can be equal to 63, 191, 255, 319...')
+        self._maximum_disparity = maximum_disparity
+        # During the embedding spatial dimensions of an input are downsampled
+        # 4x times. Therefore, "maximum_disparity" of matching module is
+        # computed as (maximum_disparity + 1) / 4 - 1.
         self._matching.set_maximum_disparity((maximum_disparity + 1) // 4 - 1)
 
     def forward(self, left_image, right_image):
