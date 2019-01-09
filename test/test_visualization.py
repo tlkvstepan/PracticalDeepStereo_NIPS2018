@@ -11,10 +11,10 @@ import torch as th
 from practical_deep_stereo import visualization
 
 
-def test_save_color_image():
+def test_save_image():
     filename = tempfile.mkstemp(suffix='.png')[1]
-    visualization.save_color_image(
-        filename=filename, color_image=th.ones(3, 10, 20))
+    visualization.save_image(
+        filename=filename, image=th.ones(3, 10, 20))
     assert os.path.isfile(filename)
 
 
@@ -29,11 +29,11 @@ def test_image_with_binary_error():
     assert th.all(overlay[:, 2, 3].squeeze() == th.ByteTensor([0, 0, 255]))
 
 
-def test_save_matrix_as_image():
+def test_save_matrix():
     filename = tempfile.mkstemp(suffix='.png')[1]
-    visualization.save_matrix_as_image(
-        matrix=th.rand(10, 20),
+    visualization.save_matrix(
         filename=filename,
+        matrix=th.rand(10, 20),
         minimum_value=0.1,
         maximum_value=0.9,
         colormap='magma')

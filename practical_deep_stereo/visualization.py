@@ -3,41 +3,54 @@
 # Space Center (eSpace), 2018
 # See the LICENSE.TXT file for more details.
 
-import cv2
 import torch as th
 
 import matplotlib.pyplot as plt
+from mpl_toolkits import axes_grid1
 
 
-def save_color_image(filename, color_image):
+def _add_scaled_colorbar(plot, aspect=20, pad_fraction=0.5, **kwargs):
+    """Adds scaled colorbar to existing plot."""
+    divider = axes_grid1.make_axes_locatable(plot.axes)
+    width = axes_grid1.axes_size.AxesY(plot.axes, aspect=1. / aspect)
+    pad = axes_grid1.axes_size.Fraction(pad_fraction, width)
+    current_axis = plt.gca()
+    cax = divider.append_axes("right", size=width, pad=pad)
+    plt.sca(current_axis)
+    return plot.axes.figure.colorbar(plot, cax=cax, **kwargs)
+
+
+def save_image(filename, image):
     """Save color image to file.
 
     Args:
-        filename: image filename.
+        filename: image file where the image will be saved..
         color_image: color image tensor of size (color, height, width)
                      (RGB colors order).
     """
-    # Note, that imwrite of OpenCv requires tensor:
-    # (1) with BGR colors channels order;
-    # (2) with dimensionality (height, width, color).
-    cv2.imwrite(filename, cv2.cvtColor(
-        color_image.permute([1, 2, 0]).numpy(), cv2.COLOR_RGB2BGR))
+    figure = plt.figure()
+    plot = plt.imshow(image.permute(1, 2, 0).numpy())
+    plot.axes.get_xaxis().set_visible(False)
+    plot.axes.get_yaxis().set_visible(False)
+    figure.savefig(filename, bbox_inches='tight', dpi=200)
+    plt.close()
 
-def save_matrix_as_image(matrix,
-                         filename=None,
-                         minimum_value=None,
-                         maximum_value=None,
-                         colormap='magma'):
+
+def save_matrix(filename,
+                matrix,
+                minimum_value=None,
+                maximum_value=None,
+                colormap='magma'):
     """Saves the matrix to the image file.
 
     Args:
+        filename: image file where the matrix will be saved.
         matrix: tensor of size (height x width).
         minimum_value, maximum value: boundaries of the range.
                                       Values outside ot the range are
                                       shown in white. The colors of other
                                       values are determined by the colormap.
         colormap: map that determines color coding of matrix values.
-        filename: image file where the matrix is saved.
     """
     figure = plt.figure()
     if minimum_value is None:
@@ -46,6 +59,7 @@ def save_matrix_as_image(matrix,
         maximum_value = matrix.max()
     plot = plt.imshow(
         matrix.numpy(), colormap, vmin=minimum_value, vmax=maximum_value)
+    _add_scaled_colorbar(plot)
     plot.axes.get_xaxis().set_visible(False)
     plot.axes.get_yaxis().set_visible(False)
     figure.savefig(filename, bbox_inches='tight', dpi=200)
