@@ -29,6 +29,7 @@ class Embedding(nn.Module):
         """
         super(Embedding, self).__init__()
         embedding_modules = [
+            nn.InstanceNorm2d(number_of_input_features),
             modules.convolutional_block_5x5_stride_2(
                 number_of_input_features, number_of_embedding_features),
             modules.convolutional_block_5x5_stride_2(
