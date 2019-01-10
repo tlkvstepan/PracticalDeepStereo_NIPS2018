@@ -36,9 +36,8 @@ def _check_test_example(example):
 
 
 def test_kitti_dataset():
-    kitti_dataset.Kitti.NUMBER_OF_VALIDATION_EXAMPLES = 2
     training_set, validation_set = kitti_dataset.Kitti.training_split(
-        FOLDER_WITH_FRAGMENT_OF_KITTI_DATASET)
+        FOLDER_WITH_FRAGMENT_OF_KITTI_DATASET, number_of_validation_examples=2)
     training_set.transforms = [_mockup_transform]
     assert len(validation_set) == 2
 

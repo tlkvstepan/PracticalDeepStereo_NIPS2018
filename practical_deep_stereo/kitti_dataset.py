@@ -11,8 +11,6 @@ import torch as th
 
 from practical_deep_stereo import dataset
 
-NUMBER_OF_VALIDATION_EXAMPLES = 58
-
 
 def _find_examples(left_images_folder,
                    right_images_folder,
@@ -105,7 +103,7 @@ class Kitti(dataset.Dataset):
         return disparity_image
 
     @classmethod
-    def training_split(cls, dataset_folder):
+    def training_split(cls, dataset_folder, number_of_validation_examples=58):
         """Returns training and validation datasets.
 
         The function always generates same split. For validation
@@ -115,6 +113,8 @@ class Kitti(dataset.Dataset):
             dataset_folder: folder that contains "data_stereo_flow"
                     folder with Kitti2012 dataset and "data_scene_flow"
                     folder with Kitti2015 dataset.
+            number_of_validation_examples: number of examples from the training
+                    set that are used for validation.
         """
         examples = _find_examples(
             left_images_folder=os.path.join(dataset_folder, 'data_stereo_flow',
@@ -139,11 +139,10 @@ class Kitti(dataset.Dataset):
         # This garantee that splits will be same in a different runs.
         random.seed(0)
         random.shuffle(examples)
-        validation_examples = examples[0:NUMBER_OF_VALIDATION_EXAMPLES]
-        training_examples = examples[NUMBER_OF_VALIDATION_EXAMPLES:]
+        validation_examples = examples[0:number_of_validation_examples]
+        training_examples = examples[number_of_validation_examples:]
 
-        return Kitti(training_examples), Kitti(
-            validation_examples)
+        return Kitti(training_examples), Kitti(validation_examples)
 
     @classmethod
     def kitti2015_benchmark(cls, dataset_folder):
