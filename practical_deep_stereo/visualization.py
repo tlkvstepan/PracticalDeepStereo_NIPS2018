@@ -6,6 +6,9 @@
 import torch as th
 
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg') 
+
 from mpl_toolkits import axes_grid1
 
 
