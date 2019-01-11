@@ -181,8 +181,9 @@ def _compute_cumulative_distribution(disparity_image, minimum_disparity,
                                      maximum_disparity):
     bins = [min(minimum_disparity, 0)] + list(range(
         1, 512)) + [max(maximum_disparity, 512)]
-    return np.cumsum(
-        np.histogram(disparity_image[:], bins=bins, normed=True)[0]) * 100.0
+    histogram = np.histogram(disparity_image[:], bins=bins)[0]
+    histogram = histogram / histogram.sum()
+    return np.cumsum(histogram) * 100.0
 
 
 def _compute_and_save_disparity_statistic(disparity_image_file,
@@ -235,6 +236,7 @@ def _find_examples(dataset_folder):
             of disparities from 0 to 255. Out of range disparities
             contribute to the boundary bins.
     """
+    dataset_folder = os.path.abspath(dataset_folder)
     images_folder = os.path.join(dataset_folder, 'frames_cleanpass')
     disparity_images_folder = os.path.join(dataset_folder, 'disparity')
     folders_with_left_images = _folders_with_left_images(images_folder)
