@@ -3,7 +3,7 @@ This repository contains refactored code for ["Practical Deep Stereo (PDS): Towa
 
 
 ## Preparing Datasets
-To set up FlyingThings3D dataset, download PNG RGB cleanpass images and disparities from [website of Patter Recognition and Image Processing group of University of Freiburg](https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html). Unpack the archive with images into `PracticalDeepStereo_NIPS2018/dataset/flyingthings3d/frames_cleanpass` and archive with disparities into `PracticalDeepStereo_NIPS2018/dataset/flyingthings3d/disparities`.      
+To set up FlyingThings3D dataset, download PNG RGB cleanpass images and disparities from [website of Patter Recognition and Image Processing group of University of Freiburg](https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html). Unpack the archive with images into `PracticalDeepStereo_NIPS2018/datasets/flyingthings3d/frames_cleanpass` and archive with disparities into `PracticalDeepStereo_NIPS2018/datasets/flyingthings3d/disparity`.      
 
 ## Training on FlyingThings3D
 During the first run, the dataset object calculates and saves disparity statistic for every example in the dataset. Therefore, it might take a while before actuall training starts.
