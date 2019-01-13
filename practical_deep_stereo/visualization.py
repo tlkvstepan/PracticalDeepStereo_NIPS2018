@@ -5,9 +5,10 @@
 
 import torch as th
 
-import matplotlib.pyplot as plt
+# Matplotlib backend should be choosen before pyplot is imported.
 import matplotlib
-matplotlib.use('Agg') 
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 from mpl_toolkits import axes_grid1
 
