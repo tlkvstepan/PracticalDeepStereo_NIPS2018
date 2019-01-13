@@ -5,7 +5,7 @@
 
 from torch import nn
 
-from practical_deep_stereo import modules
+from practical_deep_stereo import network_blocks
 
 
 class Embedding(nn.Module):
@@ -30,17 +30,17 @@ class Embedding(nn.Module):
         super(Embedding, self).__init__()
         embedding_modules = [
             nn.InstanceNorm2d(number_of_input_features),
-            modules.convolutional_block_5x5_stride_2(
+            network_blocks.convolutional_block_5x5_stride_2(
                 number_of_input_features, number_of_embedding_features),
-            modules.convolutional_block_5x5_stride_2(
+            network_blocks.convolutional_block_5x5_stride_2(
                 number_of_embedding_features, number_of_embedding_features),
         ]
         embedding_modules += [
-            modules.ResidualBlock(number_of_embedding_features)
+            network_blocks.ResidualBlock(number_of_embedding_features)
             for _ in range(number_of_residual_blocks)
         ]
         self._embedding_modules = nn.ModuleList(embedding_modules)
-        self._shortcut = modules.convolutional_block_3x3(
+        self._shortcut = network_blocks.convolutional_block_3x3(
             number_of_embedding_features, number_of_shortcut_features)
 
     def forward(self, image):

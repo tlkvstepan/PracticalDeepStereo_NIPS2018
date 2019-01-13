@@ -5,7 +5,7 @@
 
 from torch import nn
 
-from practical_deep_stereo import modules
+from practical_deep_stereo import network_blocks
 
 
 class ContractionBlock(nn.Module):
@@ -19,9 +19,9 @@ class ContractionBlock(nn.Module):
 
     def __init__(self, number_of_features):
         super(ContractionBlock, self).__init__()
-        self._downsampling_2x = modules.convolutional_block_3x3x3_stride_2(
+        self._downsampling_2x = network_blocks.convolutional_block_3x3x3_stride_2(
             number_of_features, 2 * number_of_features)
-        self._smoothing = modules.convolutional_block_3x3x3(
+        self._smoothing = network_blocks.convolutional_block_3x3x3(
             2 * number_of_features, 2 * number_of_features)
 
     def forward(self, block_input):
@@ -45,9 +45,9 @@ class ExpansionBlock(nn.Module):
     def __init__(self, number_of_features):
         super(ExpansionBlock, self).__init__()
         self._upsampling_2x = \
-            modules.transposed_convolutional_block_4x4x4_stride_2(
+            network_blocks.transposed_convolutional_block_4x4x4_stride_2(
                     number_of_features, number_of_features // 2)
-        self._smoothing = modules.convolutional_block_3x3x3(
+        self._smoothing = network_blocks.convolutional_block_3x3x3(
             number_of_features // 2, number_of_features // 2)
 
     def forward(self, block_input, shortcut_from_contraction):
@@ -73,7 +73,7 @@ class Regularization(nn.Module):
     def __init__(self, number_of_features=8):
         """Returns initialized regularization module."""
         super(Regularization, self).__init__()
-        self._smoothing = modules.convolutional_block_3x3x3(
+        self._smoothing = network_blocks.convolutional_block_3x3x3(
             number_of_features, number_of_features)
         self._contraction_blocks = nn.ModuleList([
             ContractionBlock(number_of_features * scale)
@@ -84,10 +84,10 @@ class Regularization(nn.Module):
             for scale in [16, 8, 4, 2]
         ])
         self._upsample_to_halfsize = \
-            modules.transposed_convolutional_block_4x4x4_stride_2(
+            network_blocks.transposed_convolutional_block_4x4x4_stride_2(
                 number_of_features, number_of_features // 2)
         self._upsample_to_fullsize = \
-            modules.transposed_convolution_3x4x4_stride_122(
+            network_blocks.transposed_convolution_3x4x4_stride_122(
                 number_of_features // 2, 1)
 
     def forward(self, matching_signatures, shortcut_from_left_image):

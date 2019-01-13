@@ -6,7 +6,7 @@
 from torch import nn
 import torch as th
 
-from practical_deep_stereo import modules
+from practical_deep_stereo import network_blocks
 
 
 def _pad_zero_columns_from_left(tensor, number_of_columns):
@@ -79,15 +79,15 @@ class MatchingOperation(nn.Module):
         """
         super(MatchingOperation, self).__init__()
         matching_operation_modules = [
-            modules.convolution_3x3(number_of_concatenated_descriptor_features,
-                                    number_of_features)
+            network_blocks.convolution_3x3(
+                number_of_concatenated_descriptor_features, number_of_features)
         ]
         matching_operation_modules += [
-            modules.ResidualBlock(number_of_features)
+            network_blocks.ResidualBlock(number_of_features)
             for _ in range(number_of_residual_blocks)
         ]
         matching_operation_modules += [
-            modules.convolution_3x3(
+            network_blocks.convolution_3x3(
                 number_of_features,
                 number_of_compact_matching_signature_features)
         ]
