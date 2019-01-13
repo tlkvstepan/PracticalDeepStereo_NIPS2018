@@ -243,7 +243,7 @@ class PdsTrainer(_Trainer):
 
     def _compute_loss(self, batch):
         # Here network output contains matching cost.
-        batch['loss'] = self._criterion(-batch['network_output'],
+        batch['loss'] = self._criterion(batch['network_output'],
                                         batch['disparity_image'])
 
     def _compute_error(self, example):
