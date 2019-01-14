@@ -44,8 +44,9 @@ def transposed_convolution_3x4x4_stride_122(number_of_input_features,
         padding=(1, 1, 1))
 
 
-def convolutional_block_2D(number_of_input_features, number_of_output_features,
-                           kernel_size, stride):
+def convolution_block_2D_with_relu_and_instance_norm(number_of_input_features,
+                                                     number_of_output_features,
+                                                     kernel_size, stride):
     return nn.Sequential(
         nn.Conv2d(
             number_of_input_features,
@@ -57,8 +58,9 @@ def convolutional_block_2D(number_of_input_features, number_of_output_features,
         nn.InstanceNorm2d(number_of_output_features, affine=True))
 
 
-def convolution_block_3D(number_of_input_features, number_of_output_features,
-                         kernel_size, stride):
+def convolution_block_3D_with_relu_and_instance_norm(number_of_input_features,
+                                                     number_of_output_features,
+                                                     kernel_size, stride):
     return nn.Sequential(
         nn.Conv3d(
             number_of_input_features,
@@ -70,24 +72,22 @@ def convolution_block_3D(number_of_input_features, number_of_output_features,
         nn.InstanceNorm3d(number_of_output_features, affine=True))
 
 
-def transposed_convololution_3D(number_of_input_features,
-                                number_of_output_features,
-                                kernel_size, stride,
-                                padding):
+def transposed_convololution_block_3D_with_relu_and_instance_norm(
+        number_of_input_features, number_of_output_features, kernel_size,
+        stride, padding):
     return nn.Sequential(
         nn.ConvTranspose3d(
             number_of_input_features,
             number_of_output_features,
             kernel_size=kernel_size,
             stride=stride,
-            padding=padding),
-        nn.LeakyReLU(negative_slope=0.1, inplace=True),
+            padding=padding), nn.LeakyReLU(negative_slope=0.1, inplace=True),
         nn.InstanceNorm3d(number_of_output_features, affine=True))
 
 
 def convolutional_block_5x5_stride_2(number_of_input_features,
                                      number_of_output_features):
-    return convolutional_block_2D(
+    return convolution_block_2D_with_relu_and_instance_norm(
         number_of_input_features,
         number_of_output_features,
         kernel_size=5,
@@ -96,7 +96,7 @@ def convolutional_block_5x5_stride_2(number_of_input_features,
 
 def convolutional_block_3x3(number_of_input_features,
                             number_of_output_features):
-    return convolutional_block_2D(
+    return convolution_block_2D_with_relu_and_instance_norm(
         number_of_input_features,
         number_of_output_features,
         kernel_size=3,
@@ -105,7 +105,7 @@ def convolutional_block_3x3(number_of_input_features,
 
 def convolutional_block_3x3x3(number_of_input_features,
                               number_of_output_features):
-    return convolution_block_3D(
+    return convolution_block_3D_with_relu_and_instance_norm(
         number_of_input_features,
         number_of_output_features,
         kernel_size=3,
@@ -114,7 +114,7 @@ def convolutional_block_3x3x3(number_of_input_features,
 
 def convolutional_block_3x3x3_stride_2(number_of_input_features,
                                        number_of_output_features):
-    return convolution_block_3D(
+    return convolution_block_3D_with_relu_and_instance_norm(
         number_of_input_features,
         number_of_output_features,
         kernel_size=3,
@@ -123,7 +123,7 @@ def convolutional_block_3x3x3_stride_2(number_of_input_features,
 
 def transposed_convolutional_block_4x4x4_stride_2(number_of_input_features,
                                                   number_of_output_features):
-    return transposed_convololution_3D(
+    return transposed_convololution_block_3D_with_relu_and_instance_norm(
         number_of_input_features,
         number_of_output_features,
         kernel_size=4,
