@@ -266,8 +266,9 @@ class PdsTrainer(_Trainer):
                 filename=self._left_image_template.format(example_index + 1),
                 image=left_image)
             # Ensures same scale of the ground truth and estimated disparity.
+            noninf_mask = ~th.isinf(ground_truth_disparity_image)
             minimum_disparity = ground_truth_disparity_image.min()
-            maximum_disparity = ground_truth_disparity_image.max()
+            maximum_disparity = ground_truth_disparity_image[noninf_mask].max()
             visualization.save_matrix(
                 filename=self._ground_truth_disparity_image_template.format(
                     example_index + 1),

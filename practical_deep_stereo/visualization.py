@@ -49,7 +49,8 @@ def save_matrix(filename,
 
     Args:
         filename: image file where the matrix will be saved.
-        matrix: tensor of size (height x width).
+        matrix: tensor of size (height x width). Some values might be
+                equal to inf.
         minimum_value, maximum value: boundaries of the range.
                                       Values outside ot the range are
                                       shown in white. The colors of other
@@ -60,7 +61,7 @@ def save_matrix(filename,
     if minimum_value is None:
         minimum_value = matrix.min()
     if maximum_value is None:
-        maximum_value = matrix.max()
+        maximum_value = matrix[~th.isinf(minimum_value)].max()
     plot = plt.imshow(
         matrix.numpy(), colormap, vmin=minimum_value, vmax=maximum_value)
     _add_scaled_colorbar(plot)
