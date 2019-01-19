@@ -86,8 +86,8 @@ class _Trainer(object):
                                fine-tuning).
         """
         checkpoint = th.load(filename)
+        self._network.load_state_dict(checkpoint['network'])
         if load_only_network:
-            self._network.load_state_dict(checkpoint['network'])
             return
         parameters = {
             'current_epoch': len(checkpoint['training_losses']),
@@ -193,7 +193,7 @@ class _Trainer(object):
             loss = batch['loss']
             loss.backward()
             self._optimizer.step()
-            training_losses.append(loss.detach())
+            training_losses.append(loss.detach().item())
             del batch, loss
             th.cuda.empty_cache()
         return training_losses
