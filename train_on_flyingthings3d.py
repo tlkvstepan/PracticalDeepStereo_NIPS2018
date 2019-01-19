@@ -3,7 +3,6 @@
 # ECOLE POLYTECHNIQUE FEDERALE DE LAUSANNE, Switzerland,
 # Space Center (eSpace), 2018
 # See the LICENSE.TXT file for more details.
-
 """Script performs trainig from scratch on flyingthings3D.
 
 Training is performed with maximum disparity of 255 on
@@ -11,24 +10,29 @@ Training is performed with maximum disparity of 255 on
 
 For optimization RMSprop method with standard setting is used.
 Training is performed for 160k iterations in totla.
-During first 120k iterations learning rate is set to 0.01 
+During first 120k iterations learning rate is set to 0.01
 and than it is halfed every 20k iterations.
 
-500 examples from the canonical training set are allocated 
+500 examples from the canonical training set are allocated
 for validation and the rest of the examples are allocated for
 training dataset.
 
-All images with disparities outside of [0, 255] disparity range are
-excluded from training. Images with rendering artifacts are also excluded.
+All images with disparities outside of [0, 255] disparity
+range are excluded from training. Images with rendering
+artifacts are also excluded.
 
-Optionally, the user can pass to the script "dataset_folder" with flyinghtings3d
-dataset and "experiment_folder" where experiment results will be saved.
+Optionally, the user can pass to the script:
+"dataset_folder" with flyinghtings3d dataset;
+"experiment_folder" where experiment results are be saved;
+"checkpoint_file" with checkpoint that will be loaded
+                  to restart training.
 
 Example call:
 
 ./train_on_flyingthings3d.py \
     --experiment_folder experiments/flyingthings3d
     --dataset_folder datasets/flyingthings3d
+    --load_checkopoint experiments/flyingthings3d/001_checkpoint.bin
 """
 
 import os
@@ -88,12 +92,17 @@ def _initialize_parameters(dataset_folder, experiment_folder):
     '--experiment_folder',
     default='experiments/flyingthings3d',
     type=click.Path(exists=False))
-def train_on_flyingthings(dataset_folder, experiment_folder):
-    os.mkdir(experiment_folder)
+@click.option('--checkpoint_file', default=None, type=click.Path(exists=True))
+def train_on_flyingthings(dataset_folder, experiment_folder, checkpoint_file):
+    if not os.path.isdir(experiment_folder):
+        os.mkdir(experiment_folder)
     dataset_folder = os.path.abspath(dataset_folder)
     experiment_folder = os.path.abspath(experiment_folder)
+    checkpoint_file = os.path.abspath(checkpoint_file)
     pds_trainer = trainer.PdsTrainer(
         _initialize_parameters(dataset_folder, experiment_folder))
+    if checkpoint_file is not None:
+        pds_trainer.load_checkpoint(checkpoint_file)
     pds_trainer.train()
 
 
