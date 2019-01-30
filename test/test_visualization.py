@@ -43,7 +43,7 @@ def test_logger():
     filename = tempfile.mkstemp(suffix='.txt')[1]
     logger = visualization.Logger(filename=filename)
     logger.log('This is logger')
-    logger.log('We can substitute last row', overwrite_line=True)
+    logger.log('We can substitute last row')
     assert os.path.isfile(filename)
 
 

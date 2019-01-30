@@ -93,33 +93,19 @@ def overlay_image_with_binary_error(color_image, binary_error):
 
 
 class Logger(object):
-    """Logger with line overwriting capability.
-
-    Line overwriting can increase readability of the
-    log file by minimizing number of lines in the file.
-    """
 
     def __init__(self, filename):
         self._filename = filename
 
-    def log(self, text, overwrite_line=False):
-        """Appends text line to the file.
-
-        Args:
-            text: text line.
-            overwrite_line: if flag is True when
-                            last line in the file
-                            is substituted by new.
-        """
+    def log(self, text):
+        """Appends text line to the file."""
         if os.path.isfile(self._filename):
             handler = open(self._filename, 'r')
             lines = handler.readlines()
-            if overwrite_line:
-                lines = lines[:-1]
             handler.close()
         else:
             lines = []
-        lines.append(text)
+        lines.append(text + '\n')
         handler = open(self._filename, 'w')
         handler.writelines(lines)
         handler.close()
