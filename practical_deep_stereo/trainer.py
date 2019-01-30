@@ -3,8 +3,8 @@
 # Space Center (eSpace), 2018
 # See the LICENSE.TXT file for more details.
 
-import logging
 import os
+import time
 
 import torch as th
 
@@ -19,9 +19,15 @@ def _is_on_cuda(network):
 def _is_logging_required(example_index, number_of_examples):
     """Returns True only if logging is required.
 
-    Logging is performed for 10th, 20th, ... 100th quantiles.
+    Logging is performed after 10%, 20%, ... 100% percents of examples
+    is processed.
     """
     return (example_index + 1) % max(1, number_of_examples // 10) == 0
+
+
+def _set_fastest_cuda_mode():
+    th.backends.cudnn.fastest = True
+    th.backends.cudnn.benchmark = True
 
 
 def _move_tensors_to_cuda(dictionary_of_tensors):
@@ -31,14 +37,6 @@ def _move_tensors_to_cuda(dictionary_of_tensors):
             for key, value in dictionary_of_tensors.items()
         }
     return dictionary_of_tensors.cuda()
-
-
-def _change_logging_file(filename):
-    file_handler = logging.FileHandler(filename, 'a')
-    rootlog = logging.getLogger()
-    for old_file_handler in rootlog.handlers[:]:
-        rootlog.removeHandler(old_file_handler)
-    rootlog.addHandler(file_handler)
 
 
 class _Trainer(object):
@@ -51,6 +49,8 @@ class _Trainer(object):
                         parameters of the object (without
                         underscore).
         """
+        if th.cuda.is_available():
+            _set_fastest_cuda_mode()
         self._experiment_folder = None
         self._current_epoch = 0
         self._end_epoch = None
@@ -58,6 +58,7 @@ class _Trainer(object):
         self._network = None
         self._training_set_loader = None
         self._validation_set_loader = None
+        self._test_set_loader = None
         self._optimizer = None
         self._criterion = None
         self._training_losses = []
@@ -70,7 +71,7 @@ class _Trainer(object):
             _key = '_{0}'.format(key)
             attributes[_key] = value
 
-    def _define_files(self):
+    def _initialize_filenames(self):
         self._log_filename = os.path.join(self._experiment_folder, 'log.txt')
         self._plot_filename = os.path.join(self._experiment_folder, 'plot.png')
         self._checkpoint_template = os.path.join(self._experiment_folder,
@@ -113,66 +114,101 @@ class _Trainer(object):
             self._learning_rate_scheduler.state_dict()
         }, self._checkpoint_template.format(self._current_epoch + 1))
 
+    def test(self):
+        """Test network and reports average errors and execution time."""
+        self._initialize_filenames()
+        self._logger = visualization.Logger(self._log_filename)
+        self._network.eval()
+        processing_times = []
+        validation_errors = []
+        number_of_examples = len(self._test_set_loader)
+        for example_index, example in enumerate(self._test_set_loader):
+            if _is_logging_required(example_index, number_of_examples):
+                self._logger.log('testing: {0:05d} ({1:05d})'.format(
+                    example_index + 1, number_of_examples))
+            if _is_on_cuda(self._network):
+                example = _move_tensors_to_cuda(example)
+            with th.no_grad():
+                self._run_network_and_measure_time(example)
+            self._compute_error(example)
+            validation_errors.append(example['error'])
+            processing_times.append(example['processing_time'])
+            self._visualize_example(example, example_index)
+            del example
+            th.cuda.empty_cache()
+        self._report_test_results(
+            self._average_errors(validation_errors),
+            self._average_processing_time(processing_times))
+
     def train(self):
-        """Train network."""
-        if th.cuda.is_available():
-            th.backends.cudnn.fastest = True
-            th.backends.cudnn.benchmark = True
-        self._define_files()
-        logging.basicConfig(
-            filename=self._log_filename,
-            format='%(asctime)s : %(message)s',
-            datefmt="%m-%d %H:%M",
-            level=logging.INFO)
-        # basicConfig does not change file handler if it
-        # was already assigned, therefore we have to change the file handler
-        # manually.
-        _change_logging_file(self._log_filename)
+        """Trains network and returns validation error of last epoch."""
+        self._initialize_filenames()
+        self._logger = visualization.Logger(self._log_filename)
         start_epoch = self._current_epoch
         if start_epoch == self._end_epoch:
             return None
         for self._current_epoch in range(start_epoch, self._end_epoch):
-            training_losses = self._train_for_epoch()
-            validation_errors = self._validate()
-            epoch_training_loss = th.Tensor(training_losses).mean()
-            epoch_validation_error = th.Tensor(validation_errors).mean()
-            self._training_losses.append(epoch_training_loss)
-            self._validation_errors.append(epoch_validation_error)
+            self._training_losses.append(self._train_for_epoch())
+            self._validation_errors.append(self._validate())
+            self._report_training_progress()
             self._learning_rate_scheduler.step()
-            visualization.plot_losses_and_errors(self._plot_filename,
-                                                 self._training_losses,
-                                                 self._validation_errors)
             self._save_checkpoint()
-            logging.info('epoch {0:02d} ({1:02d}) : '
-                         'training loss = {2:.5f}, '
-                         'validation error = {3:.5f}, '
-                         'learning rate = {4:.5f}.'.format(
-                             self._current_epoch + 1, self._end_epoch,
-                             epoch_training_loss, epoch_validation_error,
-                             self._learning_rate_scheduler.get_lr()[0]))
         self._current_epoch = self._end_epoch
-        return epoch_validation_error
+        return self._validation_errors[-1]
 
-    def _run_network(self, batch):
-        """Computes network output and adds it to "batch"."""
+    def _run_network_and_measure_time(self, example):
+        if th.cuda.is_available():
+            th.cuda.synchronize()
+        start_time = time.time()
+        self._run_network(example)
+        if th.cuda.is_available():
+            th.cuda.synchronize()
+        example['processing_time'] = float(time.time() - start_time)
+
+    def _report_test_results(self, error, processing_time):
+        """Reports test results."""
+        raise NotImplementedError('"_report_test_results" method should '
+                                  'be implemented in a child class.')
+
+    def _run_network(self, batch_or_example):
+        """Runs network and adds processing time and output to "batch"."""
         raise NotImplementedError('"_run_network" method should '
                                   'be implemented in a child class.')
 
     def _compute_loss(self, batch):
-        """Computes training loss and adds it to "batch" as "loss" item."""
+        """Computes training loss and adds it to "batch"."""
         raise NotImplementedError('"_compute_loss" method should '
                                   'be implemented in a child class.')
 
-    def _compute_error(self, batch):
-        """Computes error and adds it to "batch" as "validation_error" item."""
+    def _compute_error(self, example):
+        """Computes error and adds it to "example" item."""
         raise NotImplementedError('"_compute_error" method should '
                                   'be implemented in a child class.')
 
-    def _visualize_validation_errors(self, batch, batch_index):
-        """Saves visualization of validation errors."""
-        raise NotImplementedError(
-            '"_visualize_validation_errors" method should '
-            'be implemented in a child class.')
+    def _visualize_example(self, example, batch_index, number_of_examples):
+        """Visualize result for the example during validation and test."""
+        raise NotImplementedError('"_visualize_example" method should '
+                                  'be implemented in a child class.')
+
+    def _average_errors(self, errors):
+        """Returns average error."""
+        raise NotImplementedError('"_average_errors" method should '
+                                  'be implemented in a child class.')
+
+    def _average_losses(self, losses):
+        """Returns average loss."""
+        raise NotImplementedError('"_average_losses" method should '
+                                  'be implemented in a child class.')
+
+    def _average_processing_time(self, processing_times):
+        """Returns average processing time."""
+        raise NotImplementedError('"_average_processing_time" method should '
+                                  'be implemented in a child class.')
+
+    def _report_training_progress(self):
+        """Plot and print training loss and validation error every epoch."""
+        raise NotImplementedError('"_report_training_progress" method should '
+                                  'be implemented in a child class.')
 
     def _train_for_epoch(self):
         """Returns training set losses."""
@@ -181,10 +217,10 @@ class _Trainer(object):
         number_of_batches = len(self._training_set_loader)
         for batch_index, batch in enumerate(self._training_set_loader):
             if _is_logging_required(batch_index, number_of_batches):
-                logging.info('epoch {0:02d} ({1:02d}) : '
-                             'training: {2:05d} ({3:05d})'.format(
-                                 self._current_epoch + 1, self._end_epoch,
-                                 batch_index + 1, number_of_batches))
+                self._logger.log('epoch {0:02d} ({1:02d}) : '
+                                 'training: {2:05d} ({3:05d})'.format(
+                                     self._current_epoch + 1, self._end_epoch,
+                                     batch_index + 1, number_of_batches))
             self._optimizer.zero_grad()
             if _is_on_cuda(self._network):
                 batch = _move_tensors_to_cuda(batch)
@@ -196,35 +232,34 @@ class _Trainer(object):
             training_losses.append(loss.detach().item())
             del batch, loss
             th.cuda.empty_cache()
-        return training_losses
+        return self._average_losses(training_losses)
 
     def _validate(self):
         """Returns validation set errors."""
         self._network.eval()
-        validation_errors = []
+        errors = []
         number_of_examples = len(self._validation_set_loader)
         for example_index, example in enumerate(self._validation_set_loader):
             if _is_logging_required(example_index, number_of_examples):
-                logging.info('epoch: {0:02d} ({1:02d}) : '
-                             'validation: {2:05d} ({3:05d})'.format(
-                                 self._current_epoch + 1, self._end_epoch,
-                                 example_index + 1, number_of_examples))
+                self._logger.log('epoch: {0:02d} ({1:02d}) : '
+                                 'validation: {2:05d} ({3:05d})'.format(
+                                     self._current_epoch + 1, self._end_epoch,
+                                     example_index + 1, number_of_examples))
             if _is_on_cuda(self._network):
                 example = _move_tensors_to_cuda(example)
             with th.no_grad():
                 self._run_network(example)
             self._compute_error(example)
-            validation_error = example['validation_error']
-            validation_errors.append(validation_error)
-            self._visualize_validation_errors(example, example_index)
+            errors.append(example['error'])
+            self._visualize_example(example, example_index)
             del example
             th.cuda.empty_cache()
-        return validation_errors
+        return self._average_errors(errors)
 
 
 class PdsTrainer(_Trainer):
-    def _define_files(self):
-        super(PdsTrainer, self)._define_files()
+    def _initialize_filenames(self):
+        super(PdsTrainer, self)._initialize_filenames()
         self._left_image_template = os.path.join(self._experiment_folder,
                                                  'example_{0:02d}_image.png')
         self._estimated_disparity_image_template = os.path.join(
@@ -242,26 +277,81 @@ class PdsTrainer(_Trainer):
             batch_or_example['left_image'], batch_or_example['right_image'])
 
     def _compute_loss(self, batch):
-        # Here network output contains matching cost.
+        # Note that "network_output" contains matching similarity.
         batch['loss'] = self._criterion(batch['network_output'],
                                         batch['disparity_image'])
 
     def _compute_error(self, example):
-        # Here network output contains disparity image.
-        (example['pixelwise_validation_error'],
-         example['validation_error']) = errors.compute_n_pixels_error(
-             example['network_output'], example['disparity_image'])
+        # Note that the "network_output" contains estimated disparity image.
+        binary_error_map, three_pixels_error = errors.compute_n_pixels_error(
+            example['network_output'], example['disparity_image'])
+        mean_absolute_error = errors.compute_absolute_error(
+            example['network_output'], example['disparity_image'])[1]
+        example['binary_error_map'] = binary_error_map
+        example['error'] = {
+            'three_pixels_error': three_pixels_error,
+            'mean_absolute_error': mean_absolute_error
+        }
 
-    def _visualize_validation_errors(self, example, example_index):
-        """Save visualization for 3 validation examples."""
-        if example_index <= 3:
+    def _average_errors(self, errors):
+        epoch_three_pixels_error = th.Tensor(
+            list(map(lambda element: element['three_pixels_error'],
+                     errors))).mean().item()
+        epoch_mean_absolute_error = th.Tensor(
+            list(map(lambda element: element['mean_absolute_error'],
+                     errors))).mean().item()
+        return {
+            'three_pixels_error': epoch_three_pixels_error,
+            'mean_absolute_error': epoch_mean_absolute_error
+        }
+
+    def _report_test_results(self, error, time):
+        self._logger.log('Testing results:'
+                         'MAE = {0:.5f} [pix], '
+                         '3PE = {1:.5f} [%], '
+                         'time-per-image = {2:.2f} [sec].'.format(
+                             error['mean_absolute_error'],
+                             error['three_pixels_error'], time))
+
+    def _average_losses(self, losses):
+        return th.Tensor(losses).mean().item()
+
+    def _average_processing_time(self, processing_times):
+        return th.Tensor(processing_times).mean().item()
+
+    def _report_training_progress(self):
+        """Plot and print training loss and validation error every epoch."""
+        validation_errors = list(
+            map(lambda element: element['three_pixels_error'],
+                self._validation_errors))
+        visualization.plot_losses_and_errors(
+            self._plot_filename, self._training_losses, validation_errors)
+        self._logger.log(
+            'epoch {0:02d} ({1:02d}) : '
+            'training loss = {2:.5f}, '
+            'MAE = {3:.5f} [pix], '
+            '3PE = {4:.5f} [%], '
+            'learning rate = {5:.5f}.'.format(
+                self._current_epoch + 1, self._end_epoch,
+                self._training_losses[-1],
+                self._validation_errors[-1]['mean_absolute_error'],
+                self._validation_errors[-1]['three_pixels_error'],
+                self._learning_rate_scheduler.get_lr()[0]))
+
+    def _visualize_example(self, example, example_index, number_of_examples=3):
+        """Save visualization for examples.
+
+        For the visualization, in addition to "disparity_image", "left_image",
+        and "network_output" (that contains estimated disparity) the example
+        should contain "binary_error_map".
+        """
+        if example_index <= number_of_examples:
             # Dataset loader adds additional singletone dimension at the
             # beggining of tensors.
             ground_truth_disparity_image = example['disparity_image'][0].cpu()
             left_image = example['left_image'][0].cpu().byte()
             estimated_disparity_image = example['network_output'][0].cpu()
-            pixelswise_3_pixels_error = example['pixelwise_validation_error'][
-                0].cpu().byte()
+            binary_error_map = example['binary_error_map'][0].cpu().byte()
             visualization.save_image(
                 filename=self._left_image_template.format(example_index + 1),
                 image=left_image)
@@ -283,7 +373,7 @@ class PdsTrainer(_Trainer):
                 maximum_value=maximum_disparity)
             image_overlayed_with_errors =\
                             visualization.overlay_image_with_binary_error(
-                left_image, pixelswise_3_pixels_error)
+                left_image, binary_error_map)
             visualization.save_image(
                 filename=self._3_pixels_error_image_template.format(
                     example_index + 1, self._current_epoch + 1),

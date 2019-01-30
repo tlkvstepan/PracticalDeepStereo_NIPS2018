@@ -23,6 +23,9 @@ FOLDER_WITH_FRAGMENT_OF_FLYINGTHINGS3D_DATASET = \
 
 
 def _initialize_parameters():
+    test_set = flyingthings3d_dataset.FlyingThings3D.benchmark_dataset(
+        FOLDER_WITH_FRAGMENT_OF_FLYINGTHINGS3D_DATASET, True)
+    test_set.subsample(1)
     training_set, validation_set = \
         flyingthings3d_dataset.FlyingThings3D.training_split(
             FOLDER_WITH_FRAGMENT_OF_FLYINGTHINGS3D_DATASET,
@@ -30,6 +33,8 @@ def _initialize_parameters():
     training_set.append_transforms(
         [transforms.CentralCrop(crop_height=64, crop_width=64)])
     validation_set.append_transforms(
+        [transforms.CentralCrop(crop_height=64, crop_width=64)])
+    test_set.append_transforms(
         [transforms.CentralCrop(crop_height=64, crop_width=64)])
     training_set_loader = data.DataLoader(
         training_set,
@@ -43,6 +48,8 @@ def _initialize_parameters():
         shuffle=False,
         num_workers=1,
         pin_memory=True)
+    test_set_loader = data.DataLoader(
+        test_set, batch_size=1, shuffle=False, num_workers=1, pin_memory=True)
     network = pds_network.PdsNetwork()
     network.set_maximum_disparity(63)
     optimizer = optim.RMSprop(network.parameters(), lr=1e-3)
@@ -57,6 +64,8 @@ def _initialize_parameters():
         lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5),
         'training_set_loader':
         training_set_loader,
+        'test_set_loader':
+        test_set_loader,
         'validation_set_loader':
         validation_set_loader,
         'end_epoch':
@@ -81,3 +90,4 @@ def test_trainer():
     assert len(pds_trainer._training_losses) == 3
     assert pds_trainer._current_epoch == 3
     assert pds_trainer._training_losses[0] > pds_trainer._training_losses[2]
+    pds_trainer.test()
