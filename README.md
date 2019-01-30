@@ -1,6 +1,13 @@
 # Practical Deep Stereo (Work in progress.. Please wait for pre-trained models.) 
 This repository contains refactored code for ["Practical Deep Stereo (PDS): Toward applications-friendly deep stereo matching" by Stepan Tulyakov, Anton Ivanov and Francois Fleuret](https://papers.nips.cc/paper/7828-practical-deep-stereo-pds-toward-applications-friendly-deep-stereo-matching), that appeared on NeurIPS2018 as a poster.
 
+## Requirements
+Please install [conda with python 3.6](https://www.anaconda.com/download) and [pytorch 1.0](https://pytorch.org/).
+Next install all dependencies by running
+```
+conda install --yes --file requirements.txt
+```
+
 ## Preparing Datasets
 To set up FlyingThings3D dataset, download PNG RGB cleanpass images and disparities from [website of Patter Recognition and Image Processing group of University of Freiburg](https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html). Unpack the archive with images into `PracticalDeepStereo_NIPS2018/datasets/flyingthings3d/frames_cleanpass` and archive with disparities into `PracticalDeepStereo_NIPS2018/datasets/flyingthings3d/disparity`.      
 
