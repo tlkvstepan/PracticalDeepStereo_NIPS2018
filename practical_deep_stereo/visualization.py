@@ -3,13 +3,14 @@
 # Space Center (eSpace), 2018
 # See the LICENSE.TXT file for more details.
 
+import os
+
 import torch as th
 
 # Matplotlib backend should be choosen before pyplot is imported.
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
+from matplotlib import pyplot as plt
 from mpl_toolkits import axes_grid1
 
 
@@ -89,6 +90,39 @@ def overlay_image_with_binary_error(color_image, binary_error):
     red, green, blue = red.squeeze(0), green.squeeze(0), blue.squeeze(0)
     red[binary_error], green[binary_error], blue[binary_error] = 0, 0, 255
     return th.stack([red, green, blue], 0).byte()
+
+
+class Logger(object):
+    """Logger with line overwriting capability.
+
+    Line overwriting can increase readability of the
+    log file by minimizing number of lines in the file.
+    """
+
+    def __init__(self, filename):
+        self._filename = filename
+
+    def log(self, text, overwrite_line=False):
+        """Appends text line to the file.
+
+        Args:
+            text: text line.
+            overwrite_line: if flag is True when
+                            last line in the file
+                            is substituted by new.
+        """
+        if os.path.isfile(self._filename):
+            handler = open(self._filename, 'r')
+            lines = handler.readlines()
+            if overwrite_line:
+                lines = lines[:-1]
+            handler.close()
+        else:
+            lines = []
+        lines.append(text)
+        handler = open(self._filename, 'w')
+        handler.writelines(lines)
+        handler.close()
 
 
 def plot_losses_and_errors(filename, losses, errors):

@@ -13,8 +13,7 @@ from practical_deep_stereo import visualization
 
 def test_save_image():
     filename = tempfile.mkstemp(suffix='.png')[1]
-    visualization.save_image(
-        filename=filename, image=th.ones(3, 10, 20))
+    visualization.save_image(filename=filename, image=th.ones(3, 10, 20))
     assert os.path.isfile(filename)
 
 
@@ -37,6 +36,14 @@ def test_save_matrix():
         minimum_value=0.1,
         maximum_value=0.9,
         colormap='magma')
+    assert os.path.isfile(filename)
+
+
+def test_logger():
+    filename = tempfile.mkstemp(suffix='.txt')[1]
+    logger = visualization.Logger(filename=filename)
+    logger.log('This is logger')
+    logger.log('We can substitute last row', overwrite_line=True)
     assert os.path.isfile(filename)
 
 
