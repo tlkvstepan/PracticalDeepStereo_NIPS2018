@@ -11,14 +11,14 @@ To run training on Flyingthings3D run
 --experiment_folder experiments/flyingthings3d \
 --dataset_folder datasets/flyingthings3d \
 ```
-During the first run, the dataset object calculates and saves disparity statistic for every example in the dataset. Therefore, it might take a while before actual training starts. Overall, the training on full-size image is very slow since it does not use batch processing. The training can be started from a checkpoint by setting the `--load_checkpoint` flag.
+During the first run, the dataset object calculates and saves disparity statistic for every example in the dataset. Therefore, it might take a while before actual training starts. Overall, the training on full-size image is very slow since it does not use batch processing. The training can be started from a checkpoint by setting the `--checkpoint_file` flag.
 
 To benchmark on Flyingthings3D run
 ```
 ./benchmark_on_flyingthings3d.py \
 --experiment_folder experiments/flyingthings3d \
 --dataset_folder datasets/flyingthings3d \
---load_checkopoint experiments/flyingthings3d/008_checkpoint.bin \
+--checkpoint_file experiments/flyingthings3d/008_checkpoint.bin \
 --is_psm_protocol
 ```
 The evalutaion protocol can be selected by setting / unsetting the `--is_psm_protocol` flag.
