@@ -45,7 +45,7 @@ def _initialize_parameters():
         pin_memory=True)
     network = pds_network.PdsNetwork()
     network.set_maximum_disparity(63)
-    optimizer = optim.RMSprop(network.parameters(), lr=1e-2)
+    optimizer = optim.RMSprop(network.parameters(), lr=1e-3)
     return {
         'network':
         network,
