@@ -11,7 +11,7 @@ To run training on Flyingthings3D run
 --experiment_folder experiments/flyingthings3d \
 --dataset_folder datasets/flyingthings3d \
 ```
-During the first run, the dataset object calculates and saves disparity statistic for every example in the dataset. Therefore, it might take a while before actual training starts. Overall, the training on full-size image is very slow since it does not use batch processing. The training can be started from the checkpoint by setting the `--load_checkpoint` flag.
+During the first run, the dataset object calculates and saves disparity statistic for every example in the dataset. Therefore, it might take a while before actual training starts. Overall, the training on full-size image is very slow since it does not use batch processing. The training can be started from a checkpoint by setting the `--load_checkpoint` flag.
 
 To benchmark on Flyingthings3D run
 ```
