@@ -30,9 +30,9 @@ Optionally, the user can pass to the script:
 Example call:
 
 ./train_on_flyingthings3d.py \
-    --experiment_folder experiments/flyingthings3d
-    --dataset_folder datasets/flyingthings3d
-    --load_checkopoint experiments/flyingthings3d/001_checkpoint.bin
+--experiment_folder experiments/flyingthings3d \
+--dataset_folder datasets/flyingthings3d \
+--load_checkopoint experiments/flyingthings3d/001_checkpoint.bin
 """
 
 import os
@@ -93,7 +93,8 @@ def _initialize_parameters(dataset_folder, experiment_folder):
     default='experiments/flyingthings3d',
     type=click.Path(exists=False))
 @click.option('--checkpoint_file', default=None, type=click.Path(exists=True))
-def train_on_flyingthings3d(dataset_folder, experiment_folder, checkpoint_file):
+def train_on_flyingthings3d(dataset_folder, experiment_folder,
+                            checkpoint_file):
     if not os.path.isdir(experiment_folder):
         os.mkdir(experiment_folder)
     dataset_folder = os.path.abspath(dataset_folder)
