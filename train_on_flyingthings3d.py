@@ -32,7 +32,7 @@ Example call:
 ./train_on_flyingthings3d.py \
 --experiment_folder experiments/flyingthings3d \
 --dataset_folder datasets/flyingthings3d \
---load_checkopoint experiments/flyingthings3d/001_checkpoint.bin
+--checkpoint_file experiments/flyingthings3d/001_checkpoint.bin
 """
 
 import os
