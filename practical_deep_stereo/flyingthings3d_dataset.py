@@ -299,9 +299,14 @@ class FlyingThings3D(dataset.Dataset):
 
         One of two benchmarking protocols can be used: "psm" or "crl". "psm"
         protocol is described in "Pyramid stereo matching network" by Jia-Ren
-        Chang et al.  "crl" protocol is described in "Cascade Residual
+        Chang et al. The "crl" protocol is described in "Cascade Residual
         Learning: A Two-stage Convolutional Neural Network for Stereo Matching"
-        by Jiahao Pang.
+        by Jiahao Pang. According to the "psm" examples where more than
+        "maximum_percentage_of_large_disparities"=25 of pixels have
+        disparity larger than "large_disparity"=300 pixels are excluded
+        from the evaluation. According to the "crl" protocol it pixels with
+        ground truth disparities larger than "maximum_disparity"=192 pixels
+        are masked out and excluded from the evaluation.
 
         Args:
             dataset_folder: folder with FlyingThings3D dataset, that contains
@@ -309,16 +314,9 @@ class FlyingThings3D(dataset.Dataset):
                             images and "disparity" folder with disparities.
             is_psm_protocol: if "True", the "psm" protocol is used, otherwise
                              "crl" protocol is used.
-            maximum_disparity: parameter of "psm" protocol. According to the
-                               protocol it pixels with ground truth disparities
-                               larger than maximum_disparity=192 pixels are
-                               masked out and excluded from the evaluation.
+            maximum_disparity: parameter of "psm" protocol.
             maximum_percentage_of_large_disparities, large_disparities:
-                    parameter of "clr" protocol. According to this protocol
-                    examples where more than
-                    maximum_percentage_of_large_disparities=25 of pixels have
-                    disparity more than large_disparity=300 pixels are excluded
-                    from the evaluation.
+                    parameter of "clr" protocol.
         """
         examples = _find_examples(dataset_folder)
         examples = _split_examples_into_training_and_test_sets(examples)[1]
