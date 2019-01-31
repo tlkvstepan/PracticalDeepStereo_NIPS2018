@@ -14,7 +14,7 @@ from torch.utils import data
 from practical_deep_stereo import flyingthings3d_dataset
 from practical_deep_stereo import loss
 from practical_deep_stereo import pds_network
-from practical_deep_stereo import trainer
+from practical_deep_stereo import pds_trainer
 from practical_deep_stereo import transforms
 
 
@@ -75,19 +75,19 @@ def _initialize_parameters():
     }
 
 
-def test_trainer():
-    pds_trainer = trainer.PdsTrainer(_initialize_parameters())
-    pds_trainer.train()
-    assert len(pds_trainer._training_losses) == 2
-    assert pds_trainer._current_epoch == 2
-    checkpoint_file = os.path.join(pds_trainer._experiment_folder,
+def test_pds_trainer():
+    trainer = pds_trainer.PdsTrainer(_initialize_parameters())
+    trainer.train()
+    assert len(trainer._training_losses) == 2
+    assert trainer._current_epoch == 2
+    checkpoint_file = os.path.join(trainer._experiment_folder,
                                    '002_checkpoint.bin')
-    pds_trainer = trainer.PdsTrainer(_initialize_parameters())
-    pds_trainer.load_checkpoint(checkpoint_file)
-    pds_trainer._current_epoch == 2
-    pds_trainer._end_epoch = 3
-    pds_trainer.train()
-    assert len(pds_trainer._training_losses) == 3
-    assert pds_trainer._current_epoch == 3
-    assert pds_trainer._training_losses[0] > pds_trainer._training_losses[2]
-    pds_trainer.test()
+    trainer = pds_trainer.PdsTrainer(_initialize_parameters())
+    trainer.load_checkpoint(checkpoint_file)
+    trainer._current_epoch == 2
+    trainer._end_epoch = 3
+    trainer.train()
+    assert len(trainer._training_losses) == 3
+    assert trainer._current_epoch == 3
+    assert trainer._training_losses[0] > trainer._training_losses[2]
+    trainer.test()
