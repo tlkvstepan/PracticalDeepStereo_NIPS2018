@@ -132,8 +132,7 @@ class Trainer(object):
             self._compute_error(example)
             validation_errors.append(example['error'])
             processing_times.append(example['processing_time'])
-            self._visualize_example(example, example_index, number_of_examples)
-            del example
+            self._visualize_example(example, example_index)
             th.cuda.empty_cache()
         self._report_test_results(
             self._average_errors(validation_errors),
@@ -184,7 +183,7 @@ class Trainer(object):
         raise NotImplementedError('"_compute_error" method should '
                                   'be implemented in a child class.')
 
-    def _visualize_example(self, example, example_index, number_of_examples):
+    def _visualize_example(self, example, example_index):
         """Visualize result for the example during validation and test.
 
         Args:
