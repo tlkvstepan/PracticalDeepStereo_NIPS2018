@@ -52,10 +52,9 @@ class SubpixelCrossEntropy(nn.Module):
         known_ground_truth_disparity = ground_truth_disparities.data != float(
             'inf')
         log_P_predicted = functional.log_softmax(similarities, dim=1)
-        sum_P_target = autograd.Variable(
-            th.zeros(ground_truth_disparities.size()))
-        sum_P_target_x_log_P_predicted = autograd.Variable(
-            th.zeros(ground_truth_disparities.size()))
+        sum_P_target = th.zeros(ground_truth_disparities.size())
+        sum_P_target_x_log_P_predicted = th.zeros(
+            ground_truth_disparities.size())
         if similarities.is_cuda:
             sum_P_target = sum_P_target.cuda()
             sum_P_target_x_log_P_predicted = \
@@ -69,6 +68,7 @@ class SubpixelCrossEntropy(nn.Module):
             sum_P_target += P_target
             sum_P_target_x_log_P_predicted += (
                 log_P_predicted[:, disparity_index] * P_target)
-
-        entropy = -sum_P_target_x_log_P_predicted / sum_P_target
-        return entropy[known_ground_truth_disparity].mean()
+        entropy = -sum_P_target_x_log_P_predicted[
+            known_ground_truth_disparity] / sum_P_target[
+                known_ground_truth_disparity]
+        return entropy.mean()
