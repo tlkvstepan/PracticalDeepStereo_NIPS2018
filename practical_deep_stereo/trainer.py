@@ -45,7 +45,7 @@ class Trainer(object):
         Args:
             parameters: dictionary with parameters, that
                         should have the same names as
-                        parameters of the object (without
+                        attributes of the class (but without
                         underscore).
         """
         if th.cuda.is_available():
@@ -132,7 +132,7 @@ class Trainer(object):
             self._compute_error(example)
             validation_errors.append(example['error'])
             processing_times.append(example['processing_time'])
-            self._visualize_example(example, example_index)
+            self._visualize_example(example, example_index, number_of_examples)
             del example
             th.cuda.empty_cache()
         self._report_test_results(
@@ -170,22 +170,29 @@ class Trainer(object):
                                   'be implemented in a child class.')
 
     def _run_network(self, batch_or_example):
-        """Runs network and adds processing time and output to "batch"."""
+        """Runs network and adds output to "batch_or_example"."""
         raise NotImplementedError('"_run_network" method should '
                                   'be implemented in a child class.')
 
     def _compute_loss(self, batch):
-        """Computes training loss and adds it to "batch"."""
+        """Computes loss and adds it to "batch" as a "loss" item."""
         raise NotImplementedError('"_compute_loss" method should '
                                   'be implemented in a child class.')
 
     def _compute_error(self, example):
-        """Computes error and adds it to "example" item."""
+        """Computes error and adds it to "example" as an "error" item."""
         raise NotImplementedError('"_compute_error" method should '
                                   'be implemented in a child class.')
 
-    def _visualize_example(self, example, batch_index, number_of_examples):
-        """Visualize result for the example during validation and test."""
+    def _visualize_example(self, example, example_index, number_of_examples):
+        """Visualize result for the example during validation and test.
+
+        Args:
+            example: should include network input and output necessary for
+                     the visualization.
+            example_index: index of the example.
+            number_of_examples: total number of validation or test examples.
+        """
         raise NotImplementedError('"_visualize_example" method should '
                                   'be implemented in a child class.')
 
@@ -205,7 +212,10 @@ class Trainer(object):
                                   'be implemented in a child class.')
 
     def _report_training_progress(self):
-        """Plot and print training loss and validation error every epoch."""
+        """Report current training progress after current epoch.
+
+        The report, for example, may include training plot and log update.
+        """
         raise NotImplementedError('"_report_training_progress" method should '
                                   'be implemented in a child class.')
 

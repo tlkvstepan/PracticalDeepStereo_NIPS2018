@@ -93,14 +93,14 @@ class PdsTrainer(trainer.Trainer):
                 self._validation_errors[-1]['three_pixels_error'],
                 self._learning_rate_scheduler.get_lr()[0]))
 
-    def _visualize_example(self, example, example_index, number_of_examples=3):
+    def _visualize_example(self, example, example_index):
         """Save visualization for examples.
 
         For the visualization, in addition to "disparity_image", "left_image",
         and "network_output" (that contains estimated disparity) the example
         should contain "binary_error_map".
         """
-        if example_index <= number_of_examples:
+        if example_index <= 3:
             # Dataset loader adds additional singletone dimension at the
             # beggining of tensors.
             ground_truth_disparity_image = example['disparity_image'][0].cpu()
