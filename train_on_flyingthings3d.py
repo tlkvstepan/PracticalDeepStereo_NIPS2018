@@ -56,13 +56,13 @@ def _initialize_parameters(dataset_folder, experiment_folder):
         training_set,
         batch_size=1,
         shuffle=True,
-        num_workers=1,
+        num_workers=3,
         pin_memory=True)
     validation_set_loader = data.DataLoader(
         validation_set,
         batch_size=1,
         shuffle=False,
-        num_workers=1,
+        num_workers=3,
         pin_memory=True)
     network = pds_network.PdsNetwork().cuda()
     optimizer = optim.RMSprop(network.parameters(), lr=1e-2)
@@ -95,14 +95,14 @@ def _initialize_parameters(dataset_folder, experiment_folder):
 @click.option('--checkpoint_file', default=None, type=click.Path(exists=True))
 def train_on_flyingthings3d(dataset_folder, experiment_folder,
                             checkpoint_file):
-    if not os.path.isdir(experiment_folder):
-        os.mkdir(experiment_folder)
     dataset_folder = os.path.abspath(dataset_folder)
     experiment_folder = os.path.abspath(experiment_folder)
-    checkpoint_file = os.path.abspath(checkpoint_file)
+    if not os.path.isdir(experiment_folder):
+        os.mkdir(experiment_folder)
     pds_trainer = trainer.PdsTrainer(
         _initialize_parameters(dataset_folder, experiment_folder))
     if checkpoint_file is not None:
+        checkpoint_file = os.path.abspath(checkpoint_file)
         pds_trainer.load_checkpoint(checkpoint_file)
     pds_trainer.train()
 
