@@ -40,16 +40,16 @@ def _initialize_parameters():
         training_set,
         batch_size=1,
         shuffle=True,
-        num_workers=1,
+        num_workers=0,
         pin_memory=True)
     validation_set_loader = data.DataLoader(
         validation_set,
         batch_size=1,
         shuffle=False,
-        num_workers=1,
+        num_workers=0,
         pin_memory=True)
     test_set_loader = data.DataLoader(
-        test_set, batch_size=1, shuffle=False, num_workers=1, pin_memory=True)
+        test_set, batch_size=1, shuffle=False, num_workers=0, pin_memory=True)
     network = pds_network.PdsNetwork()
     network.set_maximum_disparity(63)
     optimizer = optim.RMSprop(network.parameters(), lr=1e-3)
