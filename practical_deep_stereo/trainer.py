@@ -93,6 +93,7 @@ class Trainer(object):
         checkpoint = th.load(filename)
         self._network.load_state_dict(checkpoint['network'])
         if load_only_network:
+            self._logger("Network is loaded.")
             return
         parameters = {
             'current_epoch': len(checkpoint['training_losses']),
@@ -126,6 +127,7 @@ class Trainer(object):
         processing_times = []
         validation_errors = []
         number_of_examples = len(self._test_set_loader)
+        self._logger.log("Testing started.")
         for example_index, example in enumerate(self._test_set_loader):
             if _is_logging_required(example_index, number_of_examples):
                 self._logger.log('testing: {0:05d} ({1:05d})'.format(
@@ -150,6 +152,7 @@ class Trainer(object):
         start_epoch = self._current_epoch
         if start_epoch == self._end_epoch:
             return None
+        self._logger.log("Training started.")
         for self._current_epoch in range(start_epoch, self._end_epoch):
             self._training_losses.append(self._train_for_epoch())
             self._validation_errors.append(self._validate())
