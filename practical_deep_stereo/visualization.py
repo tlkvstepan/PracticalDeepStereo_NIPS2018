@@ -25,16 +25,22 @@ def _add_scaled_colorbar(plot, aspect=20, pad_fraction=0.5, **kwargs):
     return plot.axes.figure.colorbar(plot, cax=cax, **kwargs)
 
 
-def save_image(filename, image):
+def save_image(filename, image, color_first=True):
     """Save color image to file.
 
     Args:
         filename: image file where the image will be saved..
-        color_image: color image tensor of size (color, height, width)
-                     (RGB colors order).
+        image: 3d image tensor.
+        color_first: if True, the color dimesion is the first
+                     dimension of the "image", otherwise the
+                     color dimesion is the last dimesion.
     """
     figure = plt.figure()
-    plot = plt.imshow(image.permute(1, 2, 0).numpy())
+    if color_first:
+        numpy_image = image.permute(1, 2, 0).numpy()
+    else:
+        numpy_image = image.numpy()
+    plot = plt.imshow(numpy_image)
     plot.axes.get_xaxis().set_visible(False)
     plot.axes.get_yaxis().set_visible(False)
     figure.savefig(filename, bbox_inches='tight', dpi=200)
