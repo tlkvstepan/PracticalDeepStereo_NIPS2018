@@ -11,6 +11,11 @@ import torch as th
 from practical_deep_stereo import visualization
 
 
+def _get_learning_rate(optimizer):
+    for param_group in optimizer.param_groups:
+        return param_group['lr']
+
+
 def _is_on_cuda(network):
     return next(network.parameters()).is_cuda
 

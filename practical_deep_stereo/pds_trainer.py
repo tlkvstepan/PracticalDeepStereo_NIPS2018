@@ -91,7 +91,7 @@ class PdsTrainer(trainer.Trainer):
                 self._training_losses[-1],
                 self._validation_errors[-1]['mean_absolute_error'],
                 self._validation_errors[-1]['three_pixels_error'],
-                self._learning_rate_scheduler.get_lr()[0]))
+                trainer._get_learning_rate(self._optimizer)))
 
     def _visualize_example(self, example, example_index):
         """Save visualization for examples.
