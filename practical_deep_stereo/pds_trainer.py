@@ -3,6 +3,7 @@
 # Space Center (eSpace), 2018
 # See the LICENSE.TXT file for more details.
 
+from collections import defaultdict
 import os
 
 import torch as th
@@ -49,15 +50,13 @@ class PdsTrainer(trainer.Trainer):
         }
 
     def _average_errors(self, errors):
-        epoch_three_pixels_error = th.Tensor(
-            list(map(lambda element: element['three_pixels_error'],
-                     errors))).mean().item()
-        epoch_mean_absolute_error = th.Tensor(
-            list(map(lambda element: element['mean_absolute_error'],
-                     errors))).mean().item()
+        average_errors = defaultdict(lambda: [])
+        for example_error in errors:
+            for error_name, error_value in example_error.items():
+                average_errors[error_name].append(error_value)
         return {
-            'three_pixels_error': epoch_three_pixels_error,
-            'mean_absolute_error': epoch_mean_absolute_error
+            error_name: th.Tensor(error_list).mean().item()
+            for error_name, error_list in average_errors.items()
         }
 
     def _report_test_results(self, error, time):
@@ -91,7 +90,7 @@ class PdsTrainer(trainer.Trainer):
                 self._training_losses[-1],
                 self._validation_errors[-1]['mean_absolute_error'],
                 self._validation_errors[-1]['three_pixels_error'],
-                trainer._get_learning_rate(self._optimizer)))
+                trainer.get_learning_rate(self._optimizer)))
 
     def _visualize_example(self, example, example_index):
         """Save visualization for examples.
