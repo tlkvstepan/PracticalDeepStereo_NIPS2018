@@ -5,12 +5,12 @@
 
 import torch as th
 
-from practical_deep_stereo import transforms
+from practical_deep_stereo import transformers
 
 
 def test_central_crop():
     th.manual_seed(0)
-    central_crop = transforms.CentralCrop(crop_height=20, crop_width=10)
+    central_crop = transformers.CentralCrop(crop_height=20, crop_width=10)
     example = {
         'left_image': th.rand(2, 3, 111, 302),
         'right_image': th.rand(2, 3, 111, 302),

@@ -44,7 +44,7 @@ def test_flyingthings3d_dataset():
         maximum_disparity=63,
         maximum_percentage_of_large_disparities=10.0,
         large_disparity=80)
-    benchmark_set.append_transforms([_mockup_transform])
+    benchmark_set.append_transformers([_mockup_transform])
     assert len(benchmark_set) == 2
     test_example = benchmark_set[0]
     disparity_image = test_example['disparity_image']

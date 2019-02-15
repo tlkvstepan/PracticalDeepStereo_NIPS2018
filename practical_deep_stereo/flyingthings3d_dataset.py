@@ -98,7 +98,7 @@ def _filter_out_examples_with_large_disparities(examples, maximum_disparity):
 
 def _filter_out_examples_with_too_many_large_disparities(
         examples, maximum_percentage_of_large_disparities, large_disparity):
-   return [
+    return [
         example for example in examples
         if (100.0 - example['cumulative_distribution_from_0_to_255']
             [large_disparity]) < maximum_percentage_of_large_disparities
@@ -321,10 +321,10 @@ class FlyingThings3D(dataset.Dataset):
         examples = _find_examples(dataset_folder)
         examples = _split_examples_into_training_and_test_sets(examples)[1]
         if is_psm_protocol:
-            transforms = [
+            transformers = [
                 lambda input: _mask_large_disparities(input, maximum_disparity)
             ]
-            return FlyingThings3D(examples, transforms)
+            return FlyingThings3D(examples, transformers)
         examples = _filter_out_examples_with_too_many_large_disparities(
             examples, maximum_percentage_of_large_disparities, large_disparity)
         return FlyingThings3D(examples)

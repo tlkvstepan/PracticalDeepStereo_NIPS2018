@@ -10,32 +10,32 @@ import torch as th
 
 
 class Dataset(object):
-    def __init__(self, examples_files, transforms=None):
+    def __init__(self, examples_files, transformers=None):
         """Returns initialized Dataset object.
 
         Args:
             examples_files: list of examples.
-            transforms: list of the functions or objects with
+            transformers: list of the functions or objects with
                         "_call_" method, that takes example as
                         and input and return modified example.
         """
         self._examples_files = examples_files
-        self._transforms = transforms
+        self._transformers = transformers
 
-    def append_transforms(self, transforms):
-        """Adds transforms to the dataset.
+    def append_transformers(self, transformers):
+        """Adds transformers to the dataset.
 
         Args:
-            transforms: list of the functions or objects with
+            transformers: list of the functions or objects with
                         "_call_" method, that takes example as
                         and input and return modified example.
         """
-        if not isinstance(transforms, list):
-            raise ValueError('"transforms" should be a list.')
-        if self._transforms is None:
-            self._transforms = transforms
+        if not isinstance(transformers, list):
+            raise ValueError('"transformers" should be a list.')
+        if self._transformers is None:
+            self._transformers = transformers
         else:
-            self._transforms += transforms
+            self._transformers += transformers
 
     def subsample(self, number_of_examples, random_seed=None):
         """Keeps "number_of_examples" examples in the dataset.
@@ -93,7 +93,7 @@ class Dataset(object):
             the function returns only the "left_image" and the "right_image".
         """
         example = self.get_example(index)
-        if self._transforms is not None:
-            for transform in self._transforms:
-                example = transform(example)
+        if self._transformers is not None:
+            for transformer in self._transformers:
+                example = transformer(example)
         return example

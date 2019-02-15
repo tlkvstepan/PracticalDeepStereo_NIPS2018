@@ -15,7 +15,7 @@ from practical_deep_stereo import flyingthings3d_dataset
 from practical_deep_stereo import loss
 from practical_deep_stereo import pds_network
 from practical_deep_stereo import pds_trainer
-from practical_deep_stereo import transforms
+from practical_deep_stereo import transformers
 
 
 FOLDER_WITH_FRAGMENT_OF_FLYINGTHINGS3D_DATASET = \
@@ -30,12 +30,12 @@ def _initialize_parameters():
         flyingthings3d_dataset.FlyingThings3D.training_split(
             FOLDER_WITH_FRAGMENT_OF_FLYINGTHINGS3D_DATASET,
                 number_of_validation_examples=1)
-    training_set.append_transforms(
-        [transforms.CentralCrop(crop_height=64, crop_width=64)])
-    validation_set.append_transforms(
-        [transforms.CentralCrop(crop_height=64, crop_width=64)])
-    test_set.append_transforms(
-        [transforms.CentralCrop(crop_height=64, crop_width=64)])
+    training_set.append_transformers(
+        [transformers.CentralCrop(crop_height=64, crop_width=64)])
+    validation_set.append_transformers(
+        [transformers.CentralCrop(crop_height=64, crop_width=64)])
+    test_set.append_transformers(
+        [transformers.CentralCrop(crop_height=64, crop_width=64)])
     training_set_loader = data.DataLoader(
         training_set,
         batch_size=1,
