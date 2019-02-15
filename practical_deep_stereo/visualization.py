@@ -6,6 +6,7 @@
 import os
 
 import torch as th
+import numpy as np
 
 # Matplotlib backend should be choosen before pyplot is imported.
 import matplotlib
@@ -40,7 +41,7 @@ def save_image(filename, image, color_first=True):
         numpy_image = image.permute(1, 2, 0).numpy()
     else:
         numpy_image = image.numpy()
-    plot = plt.imshow(numpy_image)
+    plot = plt.imshow(numpy_image.astype(np.uint8))
     plot.axes.get_xaxis().set_visible(False)
     plot.axes.get_yaxis().set_visible(False)
     figure.savefig(filename, bbox_inches='tight', dpi=200)
@@ -99,7 +100,6 @@ def overlay_image_with_binary_error(color_image, binary_error):
 
 
 class Logger(object):
-
     def __init__(self, filename):
         self._filename = filename
 
