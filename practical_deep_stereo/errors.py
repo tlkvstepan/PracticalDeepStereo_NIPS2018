@@ -6,7 +6,9 @@
 import torch as th
 
 
-def compute_absolute_error(estimated_disparity, ground_truth_disparity):
+def compute_absolute_error(estimated_disparity,
+                           ground_truth_disparity,
+                           use_mean=True):
     """Returns pixel-wise and mean absolute error.
 
     Locations where ground truth is not avaliable do not contribute to mean
@@ -16,14 +18,20 @@ def compute_absolute_error(estimated_disparity, ground_truth_disparity):
         ground_truth_disparity: ground truth disparity where locations with
                                 unknow disparity are set to inf's.
         estimated_disparity: estimated disparity.
+        use_mean_to_average: if True than use mean to pixelwise errors,
+                             otherwise use median.
     """
     absolute_difference = (estimated_disparity - ground_truth_disparity).abs()
     locations_without_ground_truth = th.isinf(ground_truth_disparity)
     pixelwise_absolute_error = absolute_difference.clone()
     pixelwise_absolute_error[locations_without_ground_truth] = 0
-    mean_absolute_error = \
+    if use_mean:
+        average_absolute_error = \
             absolute_difference[~locations_without_ground_truth].mean().item()
-    return pixelwise_absolute_error, mean_absolute_error
+    else:
+        average_absolute_error = \
+            absolute_difference[~locations_without_ground_truth].median().item()
+    return pixelwise_absolute_error, average_absolute_error
 
 
 def compute_n_pixels_error(estimated_disparity, ground_truth_disparity, n=3.0):
