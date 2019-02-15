@@ -5,7 +5,6 @@
 
 import torch as th
 
-from torch import autograd
 from torch import nn
 from torch.nn import functional
 
