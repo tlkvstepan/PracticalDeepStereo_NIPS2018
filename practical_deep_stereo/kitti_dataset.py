@@ -30,15 +30,12 @@ def _find_examples(left_images_folder,
                                 images (specify only if avaliable).
 
     Returns:
-        List of examples, where each example consists of:
-        (1) "left_image" file with the left image;
-        (2) "right_image" file with the right image;
-        (3) "disparity_image" file with the sparse disparity image
-            for the left camera (if the disparity image is not avaliable,
-            this item is set to None);
-        (4) "reflective_disparity_image" file with the reflective
-            disparity image for the left camera (if the disparity image is
-            not avaliable, this item is set to None).
+        List of examples, where each example is a dictionary with following
+        items:
+        (1) "left" with "image", "disparity_image" and
+        "reflective_disparity_image" items. If the disparity
+            is not avaliable last two items are set to None;
+        (2) "right" with "image" item.
     """
     examples = []
     example_index = 0
@@ -57,14 +54,14 @@ def _find_examples(left_images_folder,
             reflective_disparity_image_file = os.path.join(
                 reflective_disparity_images_folder, basename)
         examples.append({
-            'left_image':
-            left_image_file,
-            'right_image':
-            right_image_file,
-            'disparity_image':
-            disparity_image_file,
-            'reflective_disparity_image':
-            reflective_disparity_image_file
+            'left': {
+                'image': left_image_file,
+                'disparity_image': disparity_image_file,
+                'reflective_disparity_image': reflective_disparity_image_file
+            },
+            'right': {
+                'image': right_image_file
+            }
         })
         example_index += 1
 
@@ -83,8 +80,8 @@ class Kitti(dataset.Dataset):
     """
 
     def _read_disparity_image(self, example_files):
-        disparity_image_file = example_files['disparity_image']
-        reflective_disparity_image_file = example_files[
+        disparity_image_file = example_files['left']['disparity_image']
+        reflective_disparity_image_file = example_files['left'][
             'reflective_disparity_image']
         if disparity_image_file is None:
             return None

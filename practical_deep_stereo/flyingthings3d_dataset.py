@@ -115,16 +115,16 @@ def _is_example_with_artifacts(path_to_left_image):
 def _filter_out_examples_with_rendering_artifacts(examples):
     return [
         example for example in examples
-        if not _is_example_with_artifacts(example['left_image'])
+        if not _is_example_with_artifacts(example['left']['image'])
     ]
 
 
 def _split_examples_into_training_and_test_sets(examples):
     test_examples = [
-        example for example in examples if 'TEST' in example['left_image']
+        example for example in examples if 'TEST' in example['left']['image']
     ]
     training_examples = [
-        example for example in examples if 'TRAIN' in example['left_image']
+        example for example in examples if 'TRAIN' in example['left']['image']
     ]
     return training_examples, test_examples
 
@@ -224,12 +224,10 @@ def _find_examples(dataset_folder):
                         images and "disparity" folder with disparities.
 
     Returns:
-        List of examples, where each example is a dictionary
-        with following items:
-        (1) "left_image_file" file with the left image;
-        (2) "right_image_file" file with the right image ;
-        (3) "disparity_image_file" file with the disparity image for the left
-            camera;
+        List of examples, where each example is a dictionary with following
+        items:
+        (1) "left" with the "image" and "disparity_image" items;
+        (2) "right" with the "image" item;
         (4) "minimum_disparity" and "maximum_disparity" disparity range
             boundaries;
         (5) "cumulative_distribution_from_0_to_255" cumulative distribution
@@ -257,12 +255,13 @@ def _find_examples(dataset_folder):
              cumulative_distribution_from_0_to_255
              ) = _read_disparity_statistic(disparity_statistic_file)
             examples.append({
-                'left_image':
-                left_image_file,
-                'right_image':
-                right_image_file,
-                'disparity_image':
-                disparity_image_file,
+                'left': {
+                    'image': left_image_file,
+                    'disparity_image': disparity_image_file
+                },
+                'right': {
+                    'image': right_image_file
+                },
                 'minimum_disparity':
                 minimum_disparity,
                 'maximum_disparity':
@@ -274,7 +273,7 @@ def _find_examples(dataset_folder):
 
 
 def _mask_large_disparities(example, maximum_disparity):
-    disparity_image = example['disparity_image']
+    disparity_image = example['left']['disparity_image']
     out_of_range_mask = ((disparity_image < 0) |
                          (disparity_image > maximum_disparity))
     disparity_image[out_of_range_mask] = float('inf')
@@ -285,7 +284,7 @@ class FlyingThings3D(dataset.Dataset):
     """FlyingThings3D dataset."""
 
     def _read_disparity_image(self, example_files):
-        disparity_image = _read_pfm(example_files['disparity_image'])
+        disparity_image = _read_pfm(example_files['left']['disparity_image'])
         return th.from_numpy(disparity_image).float()
 
     @classmethod

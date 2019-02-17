@@ -30,19 +30,20 @@ class PdsTrainer(trainer.Trainer):
 
     def _run_network(self, batch_or_example):
         batch_or_example['network_output'] = self._network(
-            batch_or_example['left_image'], batch_or_example['right_image'])
+            batch_or_example['left']['image'],
+            batch_or_example['right']['image'])
 
     def _compute_loss(self, batch):
         # Note that "network_output" contains matching similarity.
         batch['loss'] = self._criterion(batch['network_output'],
-                                        batch['disparity_image'])
+                                        batch['left']['disparity_image'])
 
     def _compute_error(self, example):
         # Note that the "network_output" contains estimated disparity image.
         binary_error_map, three_pixels_error = errors.compute_n_pixels_error(
-            example['network_output'], example['disparity_image'])
+            example['network_output'], example['left']['disparity_image'])
         mean_absolute_error = errors.compute_absolute_error(
-            example['network_output'], example['disparity_image'])[1]
+            example['network_output'], example['left']['disparity_image'])[1]
         example['binary_error_map'] = binary_error_map
         example['error'] = {
             'three_pixels_error': three_pixels_error,
@@ -102,8 +103,9 @@ class PdsTrainer(trainer.Trainer):
         if example_index <= 3:
             # Dataset loader adds additional singletone dimension at the
             # beggining of tensors.
-            ground_truth_disparity_image = example['disparity_image'][0].cpu()
-            left_image = example['left_image'][0].cpu().byte()
+            ground_truth_disparity_image = example['left']['disparity_image'][
+                0].cpu()
+            left_image = example['left']['image'][0].cpu().byte()
             estimated_disparity_image = example['network_output'][0].cpu()
             binary_error_map = example['binary_error_map'][0].cpu().byte()
             visualization.save_image(

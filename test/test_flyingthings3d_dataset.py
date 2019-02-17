@@ -16,11 +16,12 @@ def _mockup_transform(example):
 
 
 def _check_example_items(example):
-    assert 'disparity_image' in example
-    assert 'left_image' in example
-    assert 'right_image' in example
-    disparity_image = example['disparity_image']
-    left_image = example['left_image']
+    assert 'disparity_image' in example['left']
+    for camera_name in ['left', 'right']:
+        assert camera_name in example
+        assert 'image' in example[camera_name]
+    disparity_image = example['left']['disparity_image']
+    left_image = example['left']['image']
     assert len(disparity_image.size()) == 2
     assert len(left_image.size()) == 3
 
@@ -36,7 +37,7 @@ def test_flyingthings3d_dataset():
     assert (len(training_set) == 1)
     training_example = training_set[0]
     _check_example_items(training_example)
-    assert training_example['disparity_image'].max() <= 100
+    assert training_example['left']['disparity_image'].max() <= 100
 
     benchmark_set = flyingthings3d_dataset.FlyingThings3D.benchmark_dataset(
         FOLDER_WITH_FRAGMENT_OF_FLYINGTHINGS3D_DATASET,
@@ -47,12 +48,13 @@ def test_flyingthings3d_dataset():
     benchmark_set.append_transformers([_mockup_transform])
     assert len(benchmark_set) == 2
     test_example = benchmark_set[0]
-    disparity_image = test_example['disparity_image']
+    disparity_image = test_example['left']['disparity_image']
     assert disparity_image.max().item() == float('inf')
     assert disparity_image[disparity_image.ne(float('inf'))].max() <= 80.0
 
     benchmark_set = flyingthings3d_dataset.FlyingThings3D.benchmark_dataset(
-        FOLDER_WITH_FRAGMENT_OF_FLYINGTHINGS3D_DATASET, is_psm_protocol=False,
+        FOLDER_WITH_FRAGMENT_OF_FLYINGTHINGS3D_DATASET,
+        is_psm_protocol=False,
         maximum_disparity=63,
         maximum_percentage_of_large_disparities=10.0,
         large_disparity=80)

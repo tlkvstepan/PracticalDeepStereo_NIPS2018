@@ -74,9 +74,13 @@ class Dataset(object):
             raise IndexError
         example_files = self._examples_files[index]
         example = {
-            'left_image': self._read_image(example_files['left_image']),
-            'right_image': self._read_image(example_files['right_image']),
-            'disparity_image': self._read_disparity_image(example_files)
+            'left': {
+                'image': self._read_image(example_files['left']['image']),
+                'disparity_image': self._read_disparity_image(example_files)
+            },
+            'right': {
+                'image': self._read_image(example_files['right']['image'])
+            },
         }
         return example
 
@@ -84,13 +88,14 @@ class Dataset(object):
         """Returns example by its index.
 
         Returns:
-            Dictionary that consists of: "left_image", "right_image",
-            "disparity_image". The "left_image" and "right_image" are 3D
+            Dictionary that consists of: "left" and "right" items. In turn
+            "left" item contain "image" and "disparity_image", whereas "right"
+            contains only "image". The "image" is a 3D
             tensors, with indices [y, x, color_channel].
             The "disparity_image" is a 3D tensor, with indices [0, y, x]
             and values in range [0 ... disp_max] and unknown values set
             to "infinity". If example does not have the "disparity_image",
-            the function returns only the "left_image" and the "right_image".
+            the function returns only the "image".
         """
         example = self.get_example(index)
         if self._transformers is not None:

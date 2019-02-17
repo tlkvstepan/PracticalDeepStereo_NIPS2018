@@ -16,22 +16,22 @@ def _mockup_transform(example):
 
 
 def _check_fields(example):
-    assert 'disparity_image' in example
-    assert 'left_image' in example
-    assert 'right_image' in example
+    assert 'disparity_image' in example['left']
+    for camera_name in ['left', 'right']:
+        assert 'image' in example[camera_name]
 
 
 def _check_training_example(example):
     _check_fields(example)
-    left_image, disparity_image = example['left_image'], example[
-        'disparity_image']
+    left_image = example['left']['image']
+    disparity_image = example['left']['disparity_image']
     assert len(disparity_image.size()) == 2
     assert len(left_image.size()) == 3
 
 
 def _check_test_example(example):
     _check_fields(example)
-    disparity_image = example['disparity_image']
+    disparity_image = example['left']['disparity_image']
     assert disparity_image is None
 
 

@@ -30,12 +30,12 @@ def _initialize_parameters():
         flyingthings3d_dataset.FlyingThings3D.training_split(
             FOLDER_WITH_FRAGMENT_OF_FLYINGTHINGS3D_DATASET,
                 number_of_validation_examples=1)
-    training_set.append_transformers(
-        [transformers.CentralCrop(crop_height=64, crop_width=64)])
-    validation_set.append_transformers(
-        [transformers.CentralCrop(crop_height=64, crop_width=64)])
-    test_set.append_transformers(
-        [transformers.CentralCrop(crop_height=64, crop_width=64)])
+    transformers_list = [transformers.CentralCrop(height=64, width=64,
+        get_items_to_crop=lambda x: [x['left']['image'],
+        x['right']['image'], x['left']['disparity_image']])]
+    training_set.append_transformers(transformers_list)
+    validation_set.append_transformers(transformers_list)
+    test_set.append_transformers(transformers_list)
     training_set_loader = data.DataLoader(
         training_set,
         batch_size=1,
