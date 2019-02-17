@@ -65,8 +65,7 @@ class PdsNetwork(nn.Module):
         self._size_adapter = _SizeAdapter()
         self._embedding = embedding.Embedding()
         self._matching = matching.Matching(
-            operation=matching.MatchingOperation(),
-            maximum_disparity=0)
+            operation=matching.MatchingOperation(), maximum_disparity=0)
         self.set_maximum_disparity(maximum_disparity)
         self._regularization = regularization.Regularization()
         self._estimator = estimator.SubpixelMap()
@@ -83,16 +82,18 @@ class PdsNetwork(nn.Module):
         # computed as (maximum_disparity + 1) / 4 - 1.
         self._matching.set_maximum_disparity((maximum_disparity + 1) // 4 - 1)
 
+    def pass_through_network(self, left_image, right_image):
+        left_descriptor, shortcut_from_left = self._embedding(left_image)
+        right_descriptor = self._embedding(right_image)[0]
+        matching_signatures = self._matching(left_descriptor, right_descriptor)
+        return self._regularization(matching_signatures,
+                                    shortcut_from_left)
+
     def forward(self, left_image, right_image):
         """Returns sub-pixel disparity (or matching cost in training mode)."""
-
-        left_descriptor, shortcut_from_left_image = self._embedding(
-            self._size_adapter.pad(left_image))
-        right_descriptor = self._embedding(
-            self._size_adapter.pad(right_image))[0]
-        matching_signatures = self._matching(left_descriptor, right_descriptor)
-        matching_cost = self._regularization(matching_signatures,
-                                             shortcut_from_left_image)
-        if self.training:
-            return self._size_adapter.unpad(matching_cost)
-        return self._size_adapter.unpad(self._estimator(matching_cost))
+        network_output = self.pass_through_network(
+            self._size_adapter.pad(left_image),
+            self._size_adapter.pad(right_image))
+        if not self.training:
+            network_output = self._estimator(network_output)
+        return self._size_adapter.unpad(network_output)
