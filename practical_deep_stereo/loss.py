@@ -27,7 +27,7 @@ class SubpixelCrossEntropy(nn.Module):
         self._diversity = diversity
         self._disparity_step = disparity_step
 
-    def forward(self, similarities, ground_truth_disparities):
+    def forward(self, similarities, ground_truth_disparities, weights=None):
         """Returns sub-pixel cross-entropy loss.
 
         Cross-entropy is computed as
@@ -46,6 +46,7 @@ class SubpixelCrossEntropy(nn.Module):
                         disparities are filled with 'inf's.
             similarities: Tensor with similarities with indices
                          [example_index, disparity_index, y, x].
+            weights: Tensor with weights of individual locations.
         """
         maximum_disparity_index = similarities.size(1)
         known_ground_truth_disparity = ground_truth_disparities.data != float(
@@ -70,4 +71,8 @@ class SubpixelCrossEntropy(nn.Module):
         entropy = -sum_P_target_x_log_P_predicted[
             known_ground_truth_disparity] / sum_P_target[
                 known_ground_truth_disparity]
+        if weights is not None:
+            weights_with_ground_truth = weights[known_ground_truth_disparity]
+            return (weights_with_ground_truth * entropy).sum() / (
+                weights_with_ground_truth.sum() + 1e-15)
         return entropy.mean()
