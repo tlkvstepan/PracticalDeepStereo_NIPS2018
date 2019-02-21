@@ -44,13 +44,14 @@ from torch.utils import data
 
 from practical_deep_stereo import flyingthings3d_dataset
 from practical_deep_stereo import pds_network
-from practical_deep_stereo import trainer
+from practical_deep_stereo import pds_trainer
 
 
 def _initialize_parameters(dataset_folder, experiment_folder, is_psm_protocol):
     test_set = \
         flyingthings3d_dataset.FlyingThings3D.benchmark_dataset(
                 dataset_folder, is_psm_protocol)
+    print(len(test_set))
     test_set_loader = data.DataLoader(
         test_set, batch_size=1, shuffle=False, num_workers=1, pin_memory=True)
     network = pds_network.PdsNetwork().cuda()
@@ -73,7 +74,7 @@ def _initialize_parameters(dataset_folder, experiment_folder, is_psm_protocol):
     type=click.Path(exists=False))
 @click.option(
     '--checkpoint_file',
-    default='experiments/flyingthings3d/008_checkpoint.bin',
+    default='experiments/flyingthings3d/010_checkpoint.bin',
     type=click.Path(exists=True))
 @click.option('--is_psm_protocol', is_flag=True)
 def benchmark_on_flyingthings3d(dataset_folder, experiment_folder,
@@ -83,11 +84,11 @@ def benchmark_on_flyingthings3d(dataset_folder, experiment_folder,
     dataset_folder = os.path.abspath(dataset_folder)
     experiment_folder = os.path.abspath(experiment_folder)
     checkpoint_file = os.path.abspath(checkpoint_file)
-    pds_trainer = trainer.PdsTrainer(
+    trainer = pds_trainer.PdsTrainer(
         _initialize_parameters(dataset_folder, experiment_folder,
                                is_psm_protocol))
-    pds_trainer.load_checkpoint(checkpoint_file, load_only_network=True)
-    pds_trainer.test()
+    trainer.load_checkpoint(checkpoint_file, load_only_network=True)
+    trainer.test()
 
 
 if __name__ == '__main__':
