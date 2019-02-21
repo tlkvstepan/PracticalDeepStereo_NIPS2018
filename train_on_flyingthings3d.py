@@ -69,7 +69,7 @@ def _initialize_parameters(dataset_folder, experiment_folder):
     # Learning rate is 1e-2 for first 120k iterations, and than
     # is halfed every 20k iterations.
     learning_rate_scheduler = lr_scheduler.MultiStepLR(
-        optimizer, milestones=[6, 7, 8], gamma=0.5)
+        optimizer, milestones=[6, 7, 8, 9, 10], gamma=0.5)
     criterion = loss.SubpixelCrossEntropy().cuda()
     return {
         'network': network,
@@ -78,7 +78,7 @@ def _initialize_parameters(dataset_folder, experiment_folder):
         'learning_rate_scheduler': learning_rate_scheduler,
         'training_set_loader': training_set_loader,
         'validation_set_loader': validation_set_loader,
-        'end_epoch': 8,
+        'end_epoch': 10,
         'experiment_folder': experiment_folder
     }
 
