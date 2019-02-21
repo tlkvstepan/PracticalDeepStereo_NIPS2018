@@ -93,7 +93,6 @@ class Trainer(object):
         checkpoint = th.load(filename)
         self._network.load_state_dict(checkpoint['network'])
         if load_only_network:
-            self._logger("Network is loaded.")
             return
         parameters = {
             'current_epoch': len(checkpoint['training_losses']),
