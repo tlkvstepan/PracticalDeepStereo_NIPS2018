@@ -25,10 +25,20 @@ To benchmark on Flyingthings3D run
 ./benchmark_on_flyingthings3d.py \
 --experiment_folder experiments/flyingthings3d \
 --dataset_folder datasets/flyingthings3d \
---checkpoint_file experiments/flyingthings3d/008_checkpoint.bin \
+--checkpoint_file experiments/flyingthings3d/010_checkpoint.bin \
 --is_psm_protocol
 ```
 The evalutaion protocol can be selected by setting / unsetting the `--is_psm_protocol` flag.
+
+Pretrained model with training plot and log are now [avaliable](https://drive.google.com/file/d/1qeGCxvbwbE-oi-TnNW6P-rbwU3OrHotk/view?usp=sharing).
+
+For the pretrained model results are following
+
+| Protocol | MAE, [pix] | 3PE, [%] |
+|----------|:----------:|:--------:|
+| PSM      |		    |          |  
+| CRL      |            |          |
+
 
 ## Troubleshooting
 If one of the training scripts does not work please run all unit tests by executing `./run_unit_tests.sh`. This will help you to localize and fix bugs on your own.  
