@@ -93,12 +93,27 @@ class PdsTrainer(trainer.Trainer):
                 self._validation_errors[-1]['three_pixels_error'],
                 trainer.get_learning_rate(self._optimizer)))
 
-    def _visualize_example(self, example, example_index):
-        """Save visualization for examples.
+    def _visualize_test_example(self, example, example_index):
+        """Visualizes test examples.
 
-        For the visualization, in addition to "disparity_image", "left_image",
-        and "network_output" (that contains estimated disparity) the example
-        should contain "binary_error_map".
+        Saves estimated and ground truth disparity with similar scale,
+        left image, and binary error map overlayed with the left image for
+        3 examples. For each examples prints errors.
+        """
+        self._visualize_validation_example(example, example_index)
+        self._logger.log('example # {0:05d} ({1:05d}): '
+                         'MAE = {2:.5f} [pix], '
+                         '3PE = {3:.5f} [%], '.format(
+                             example_index + 1, len(self._test_set_loader),
+                             example['error']['mean_absolute_error'],
+                             example['error']['three_pixels_error']))
+
+    def _visualize_validation_example(self, example, example_index):
+        """Visualizes validation examples.
+
+        Saves estimated and ground truth disparity with similar scale,
+        left image, and binary error map overlayed with the left image for
+        3 examples.
         """
         if example_index <= 3:
             # Dataset loader adds additional singletone dimension at the

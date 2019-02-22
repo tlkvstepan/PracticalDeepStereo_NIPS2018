@@ -125,12 +125,8 @@ class Trainer(object):
         self._network.eval()
         processing_times = []
         validation_errors = []
-        number_of_examples = len(self._test_set_loader)
         self._logger.log("Testing started.")
         for example_index, example in enumerate(self._test_set_loader):
-            if _is_logging_required(example_index, number_of_examples):
-                self._logger.log('testing: {0:05d} ({1:05d})'.format(
-                    example_index + 1, number_of_examples))
             if _is_on_cuda(self._network):
                 example = _move_tensors_to_cuda(example)
             with th.no_grad():
@@ -138,7 +134,7 @@ class Trainer(object):
             self._compute_error(example)
             validation_errors.append(example['error'])
             processing_times.append(example['processing_time'])
-            self._visualize_example(example, example_index)
+            self._visualize_test_example(example, example_index)
             th.cuda.empty_cache()
         self._report_test_results(
             self._average_errors(validation_errors),
@@ -190,17 +186,28 @@ class Trainer(object):
         raise NotImplementedError('"_compute_error" method should '
                                   'be implemented in a child class.')
 
-    def _visualize_example(self, example, example_index):
+    def _visualize_test_example(self, example, example_index):
         """Visualize result for the example during validation and test.
 
         Args:
             example: should include network input and output necessary for
                      the visualization.
             example_index: index of the example.
-            number_of_examples: total number of validation or test examples.
         """
-        raise NotImplementedError('"_visualize_example" method should '
+        raise NotImplementedError('"_visualize_test_example" method should '
                                   'be implemented in a child class.')
+
+    def _visualize_validation_example(self, example, example_index):
+        """Visualize result for the example during validation and test.
+
+        Args:
+            example: should include network input and output necessary for
+                     the visualization.
+            example_index: index of the example.
+        """
+        raise NotImplementedError(
+            '"_visualize_validation_example" method should '
+            'be implemented in a child class.')
 
     def _average_errors(self, errors):
         """Returns average error."""
@@ -266,7 +273,7 @@ class Trainer(object):
                 self._run_network(example)
             self._compute_error(example)
             errors.append(example['error'])
-            self._visualize_example(example, example_index)
+            self._visualize_validation_example(example, example_index)
             del example
             th.cuda.empty_cache()
         return self._average_errors(errors)
