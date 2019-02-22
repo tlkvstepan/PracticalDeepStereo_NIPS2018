@@ -13,9 +13,9 @@ using "psm" or "crl" protocol. "psm" protocol is described in
 "Pyramid stereo matching network" by Jia-Ren Chang et al.
 "crl" protocol is described in "Cascade Residual Learning:
 A Two-stage Convolutional Neural Network for Stereo Matching"
-by Jiahao Pang. According to the "psm" examples where more than
+by Jiahao Pang. According to the "crl" examples where more than
 25% of pixels have disparity larger than 300 pixels are excluded
-from the evaluation. According to the "crl" protocol it pixels with
+from the evaluation. According to the "psm" protocol it pixels with
 ground truth disparities larger than 192 pixels are masked out
 and excluded from the evaluation.
 
@@ -51,9 +51,8 @@ def _initialize_parameters(dataset_folder, experiment_folder, is_psm_protocol):
     test_set = \
         flyingthings3d_dataset.FlyingThings3D.benchmark_dataset(
                 dataset_folder, is_psm_protocol)
-    print(len(test_set))
     test_set_loader = data.DataLoader(
-        test_set, batch_size=1, shuffle=False, num_workers=1, pin_memory=True)
+        test_set, batch_size=1, shuffle=False, num_workers=3, pin_memory=True)
     network = pds_network.PdsNetwork().cuda()
     network.set_maximum_disparity(191)
     return {
