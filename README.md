@@ -1,4 +1,4 @@
-# Practical Deep Stereo (Work in progress.. Please wait for pre-trained models.) 
+# Practical Deep Stereo 
 This repository contains refactored code for ["Practical Deep Stereo (PDS): Toward applications-friendly deep stereo matching" by Stepan Tulyakov, Anton Ivanov and Francois Fleuret](https://papers.nips.cc/paper/7828-practical-deep-stereo-pds-toward-applications-friendly-deep-stereo-matching), that appeared on NeurIPS2018 as a poster.
 
 ## Requirements
@@ -32,14 +32,14 @@ The evalutaion protocol can be selected by setting / unsetting the `--is_psm_pro
 
 Pretrained model with training plot and log are now [avaliable](https://drive.google.com/file/d/1qeGCxvbwbE-oi-TnNW6P-rbwU3OrHotk/view?usp=sharing).
 
-For the pretrained model results are following
+For the pre-trained model test results are following
 
-| Protocol | MAE, [pix] | 3PE, [%] |
-|----------|:----------:|:--------:|
-| PSM      |	1.04    |   3.09   |  
-| CRL      |            |          |
+| Protocol | MAE, [pix] | 3PE, [%] | time-per-image, [sec] |   
+|----------|:----------:|:--------:|:---------------------:|
+| PSM      |	1.04    |   3.09   |         0.62          |
+| CRL      |    0.98    |   2.96   |                       |
 
-Average time per image is 0.62 seconds.
+Note, that this result is slightly better than the one reported in the paper according to the PSM protocol and slightly worse according to CRL (but both results are still very good!).
 
 ## Troubleshooting
 If one of the training scripts does not work please run all unit tests by executing `./run_unit_tests.sh`. This will help you to localize and fix bugs on your own.  
