@@ -36,9 +36,10 @@ For the pretrained model results are following
 
 | Protocol | MAE, [pix] | 3PE, [%] |
 |----------|:----------:|:--------:|
-| PSM      |		    |          |  
+| PSM      |	1.04    |   3.09   |  
 | CRL      |            |          |
 
+Average time per image is 0.62 seconds.
 
 ## Troubleshooting
 If one of the training scripts does not work please run all unit tests by executing `./run_unit_tests.sh`. This will help you to localize and fix bugs on your own.  
