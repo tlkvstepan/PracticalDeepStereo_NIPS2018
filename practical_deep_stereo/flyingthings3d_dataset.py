@@ -300,12 +300,13 @@ class FlyingThings3D(dataset.Dataset):
         protocol is described in "Pyramid stereo matching network" by Jia-Ren
         Chang et al. The "crl" protocol is described in "Cascade Residual
         Learning: A Two-stage Convolutional Neural Network for Stereo Matching"
-        by Jiahao Pang. According to the "crl" examples where more than
-        "maximum_percentage_of_large_disparities"=25 of pixels have
+        by Jiahao Pang. According to the "crl" protocol examples where more
+        than "maximum_percentage_of_large_disparities"=25% of pixels have
         disparity larger than "large_disparity"=300 pixels are excluded
-        from the evaluation. According to the "psm" protocol it pixels with
-        ground truth disparities larger than "maximum_disparity"=192 pixels
-        are masked out and excluded from the evaluation.
+        from the evaluation. Note, that according to both protocols pixels
+        with ground truth disparity larger than maximum_disparity=192 are
+        excluded from evaluation, since network this is a largest disparity
+        that network can produce.
 
         Args:
             dataset_folder: folder with FlyingThings3D dataset, that contains
@@ -319,14 +320,14 @@ class FlyingThings3D(dataset.Dataset):
         """
         examples = _find_examples(dataset_folder)
         examples = _split_examples_into_training_and_test_sets(examples)[1]
+        transformers = [
+            lambda input: _mask_large_disparities(input, maximum_disparity)
+        ]
         if is_psm_protocol:
-            transformers = [
-                lambda input: _mask_large_disparities(input, maximum_disparity)
-            ]
             return FlyingThings3D(examples, transformers)
         examples = _filter_out_examples_with_too_many_large_disparities(
             examples, maximum_percentage_of_large_disparities, large_disparity)
-        return FlyingThings3D(examples)
+        return FlyingThings3D(examples, transformers)
 
     @classmethod
     def training_split(cls,
