@@ -13,11 +13,13 @@ using "psm" or "crl" protocol. "psm" protocol is described in
 "Pyramid stereo matching network" by Jia-Ren Chang et al.
 "crl" protocol is described in "Cascade Residual Learning:
 A Two-stage Convolutional Neural Network for Stereo Matching"
-by Jiahao Pang. According to the "crl" examples where more than
-25% of pixels have disparity larger than 300 pixels are excluded
-from the evaluation. According to the "psm" protocol it pixels with
-ground truth disparities larger than 192 pixels are masked out
-and excluded from the evaluation.
+by Jiahao Pang. According to the "crl" protocol examples where more
+than "maximum_percentage_of_large_disparities"=25% of pixels have
+disparity larger than "large_disparity"=300 pixels are excluded
+from the evaluation. Note, that according to both protocols pixels
+with ground truth disparity larger than maximum_disparity=192 are
+excluded from evaluation, since network this is a largest disparity
+that network can produce.
 
 Optionally, the user can pass to the script:
 "dataset_folder" with flyinghtings3d dataset;
