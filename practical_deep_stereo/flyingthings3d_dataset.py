@@ -100,7 +100,7 @@ def _filter_out_examples_with_too_many_large_disparities(
         examples, maximum_percentage_of_large_disparities, large_disparity):
     return [
         example for example in examples
-        if (100.0 - example['cumulative_distribution_from_0_to_255']
+        if (100.0 - example['cumulative_distribution_from_0_to_511']
             [large_disparity]) < maximum_percentage_of_large_disparities
     ]
 
@@ -230,8 +230,8 @@ def _find_examples(dataset_folder):
         (2) "right" with the "image" item;
         (4) "minimum_disparity" and "maximum_disparity" disparity range
             boundaries;
-        (5) "cumulative_distribution_from_0_to_255" cumulative distribution
-            of disparities from 0 to 255. Out of range disparities
+        (5) "cumulative_distribution_from_0_to_511" cumulative distribution
+            of disparities from 0 to 511. Out of range disparities
             contribute to the boundary bins.
     """
     dataset_folder = os.path.abspath(dataset_folder)
@@ -252,7 +252,7 @@ def _find_examples(dataset_folder):
                 _compute_and_save_disparity_statistic(
                     disparity_image_file, disparity_statistic_file)
             (minimum_disparity, maximum_disparity,
-             cumulative_distribution_from_0_to_255
+             cumulative_distribution_from_0_to_511
              ) = _read_disparity_statistic(disparity_statistic_file)
             examples.append({
                 'left': {
@@ -266,8 +266,8 @@ def _find_examples(dataset_folder):
                 minimum_disparity,
                 'maximum_disparity':
                 maximum_disparity,
-                'cumulative_distribution_from_0_to_255':
-                cumulative_distribution_from_0_to_255
+                'cumulative_distribution_from_0_to_511':
+                cumulative_distribution_from_0_to_511
             })
     return examples
 
@@ -300,10 +300,10 @@ class FlyingThings3D(dataset.Dataset):
         protocol is described in "Pyramid stereo matching network" by Jia-Ren
         Chang et al. The "crl" protocol is described in "Cascade Residual
         Learning: A Two-stage Convolutional Neural Network for Stereo Matching"
-        by Jiahao Pang. According to the "psm" examples where more than
+        by Jiahao Pang. According to the "crl" examples where more than
         "maximum_percentage_of_large_disparities"=25 of pixels have
         disparity larger than "large_disparity"=300 pixels are excluded
-        from the evaluation. According to the "crl" protocol it pixels with
+        from the evaluation. According to the "psm" protocol it pixels with
         ground truth disparities larger than "maximum_disparity"=192 pixels
         are masked out and excluded from the evaluation.
 
