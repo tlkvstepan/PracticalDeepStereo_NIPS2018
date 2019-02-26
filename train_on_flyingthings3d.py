@@ -44,7 +44,7 @@ from torch.utils import data
 
 from practical_deep_stereo import flyingthings3d_dataset
 from practical_deep_stereo import loss
-from practical_deep_stereo import pds_network
+from practical_deep_stereo import network
 from practical_deep_stereo import trainer
 
 
@@ -64,15 +64,15 @@ def _initialize_parameters(dataset_folder, experiment_folder):
         shuffle=False,
         num_workers=3,
         pin_memory=True)
-    network = pds_network.PdsNetwork().cuda()
-    optimizer = optim.RMSprop(network.parameters(), lr=1e-2)
+    pds_network = network.PdsNetwork().default().cuda()
+    optimizer = optim.RMSprop(pds_network.parameters(), lr=1e-2)
     # Learning rate is 1e-2 for first 120k iterations, and than
     # is halfed every 20k iterations.
     learning_rate_scheduler = lr_scheduler.MultiStepLR(
         optimizer, milestones=[6, 7, 8, 9, 10], gamma=0.5)
     criterion = loss.SubpixelCrossEntropy().cuda()
     return {
-        'network': network,
+        'network': pds_network,
         'optimizer': optimizer,
         'criterion': criterion,
         'learning_rate_scheduler': learning_rate_scheduler,

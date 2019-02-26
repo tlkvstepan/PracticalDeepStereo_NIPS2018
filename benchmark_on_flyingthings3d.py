@@ -45,7 +45,7 @@ import click
 from torch.utils import data
 
 from practical_deep_stereo import flyingthings3d_dataset
-from practical_deep_stereo import pds_network
+from practical_deep_stereo import network
 from practical_deep_stereo import pds_trainer
 
 
@@ -55,10 +55,10 @@ def _initialize_parameters(dataset_folder, experiment_folder, is_psm_protocol):
                 dataset_folder, is_psm_protocol)
     test_set_loader = data.DataLoader(
         test_set, batch_size=1, shuffle=False, num_workers=3, pin_memory=True)
-    network = pds_network.PdsNetwork().cuda()
-    network.set_maximum_disparity(191)
+    pds_network = network.PdsNetwork.default().cuda()
+    pds_network.set_maximum_disparity(191)
     return {
-        'network': network,
+        'network': pds_network,
         'test_set_loader': test_set_loader,
         'experiment_folder': experiment_folder
     }

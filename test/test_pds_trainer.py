@@ -13,7 +13,7 @@ from torch.utils import data
 
 from practical_deep_stereo import flyingthings3d_dataset
 from practical_deep_stereo import loss
-from practical_deep_stereo import pds_network
+from practical_deep_stereo import network
 from practical_deep_stereo import pds_trainer
 from practical_deep_stereo import transformers
 
@@ -50,12 +50,12 @@ def _initialize_parameters():
         pin_memory=True)
     test_set_loader = data.DataLoader(
         test_set, batch_size=1, shuffle=False, num_workers=0, pin_memory=True)
-    network = pds_network.PdsNetwork()
-    network.set_maximum_disparity(63)
-    optimizer = optim.RMSprop(network.parameters(), lr=1e-3)
+    pds_network = network.PdsNetwork.default()
+    pds_network.set_maximum_disparity(63)
+    optimizer = optim.RMSprop(pds_network.parameters(), lr=1e-3)
     return {
         'network':
-        network,
+        pds_network,
         'optimizer':
         optimizer,
         'criterion':
