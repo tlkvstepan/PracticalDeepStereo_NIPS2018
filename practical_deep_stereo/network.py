@@ -39,13 +39,14 @@ class PdsNetwork(nn.Module):
         left_descriptor, shortcut_from_left = self._embedding(left_image)
         right_descriptor = self._embedding(right_image)[0]
         matching_signatures = self._matching(left_descriptor, right_descriptor)
-        return self._regularization(matching_signatures, shortcut_from_left)
+        return self._regularization(matching_signatures,
+                                    shortcut_from_left), shortcut_from_left
 
     def forward(self, left_image, right_image):
         """Returns sub-pixel disparity (or matching cost in training mode)."""
         network_output = self.pass_through_network(
             self._size_adapter.pad(left_image),
-            self._size_adapter.pad(right_image))
+            self._size_adapter.pad(right_image))[0]
         if not self.training:
             network_output = self._estimator(network_output)
         return self._size_adapter.unpad(network_output)
