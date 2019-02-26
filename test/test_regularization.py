@@ -11,7 +11,7 @@ from practical_deep_stereo import regularization
 def test_contraction_block_output_size():
     th.manual_seed(0)
     block_input = th.rand(2, 6, 10, 14, 16)
-    contraction = regularization.ContractionBlock(number_of_features=6)
+    contraction = regularization.ContractionBlock3d(number_of_features=6)
     downsampling_output, smoothing_output = contraction(block_input)
     assert downsampling_output.size() == (2, 12, 5, 7, 8)
     assert smoothing_output.size() == (2, 12, 5, 7, 8)
@@ -21,7 +21,7 @@ def test_expansion_block_output_size():
     th.manual_seed(0)
     block_input = th.rand(2, 6, 10, 14, 16)
     shortcut = th.rand(2, 3, 20, 28, 32)
-    expansion = regularization.ExpansionBlock(number_of_features=6)
+    expansion = regularization.ExpansionBlock3d(number_of_features=6)
     block_output = expansion(block_input, shortcut)
     assert block_output.size() == (2, 3, 20, 28, 32)
 
