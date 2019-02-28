@@ -79,6 +79,32 @@ def save_matrix(filename,
     plt.close()
 
 
+def plot_points_on_background(points_coordinates,
+                              background,
+                              points_color=[0, 0, 255]):
+    """
+    Args:
+        points_coordinates: array of (y, x) points coordinates
+                            of size (number_of_points x 2).
+        background: (3 x height x width)
+                    gray or color image uint8.
+        color: color of points [red, green, blue] uint8.
+    """
+    if not (len(background.size()) == 3 and background.size(0) == 3):
+        raise ValueError('background should be (color x height x width).')
+    _, height, width = background.size()
+    background_with_points = background.clone()
+    y, x = points_coordinates.transpose(0, 1)
+    x_min, x_max = x.min(), x.max()
+    y_min, y_max = y.min(), y.max()
+    if not (x_min >= 0 and y_min >= 0 and x_max < width and y_max < height):
+        raise ValueError('points coordinates are outsize of "background" '
+                         'boundries.')
+    background_with_points[:, y, x] = th.Tensor(points_color).type_as(
+        background).unsqueeze(-1)
+    return background_with_points
+
+
 def overlay_image_with_binary_error(color_image, binary_error):
     """Returns byte image overlayed with the binary error.
 
@@ -92,11 +118,10 @@ def overlay_image_with_binary_error(color_image, binary_error):
                       where "True"s correspond to error,
                       and "False"s correspond to absence of error.
     """
-    washed_out_image = color_image.float() * 0.5 + 128.0
-    red, green, blue = th.chunk(washed_out_image, 3, dim=0)
-    red, green, blue = red.squeeze(0), green.squeeze(0), blue.squeeze(0)
-    red[binary_error], green[binary_error], blue[binary_error] = 0, 0, 255
-    return th.stack([red, green, blue], 0).byte()
+    points_coordinates = th.nonzero(binary_error)
+    washed_out_image = color_image // 2 + 128
+    return plot_points_on_background(points_coordinates,
+                                     washed_out_image)
 
 
 class Logger(object):

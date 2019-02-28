@@ -28,6 +28,15 @@ def test_image_with_binary_error():
     assert th.all(overlay[:, 2, 3].squeeze() == th.ByteTensor([0, 0, 255]))
 
 
+def test_plot_points_on_background():
+    background = th.zeros(3, 10, 12).byte()
+    points_coordinates = th.LongTensor([[3, 4]])
+    points_color = [0, 255, 0]
+    points_on_background = visualization.plot_points_on_background(
+        points_coordinates, background, points_color)
+    assert (points_on_background[:, 3, 4] == th.ByteTensor([0, 255, 0])).all()
+
+
 def test_save_matrix():
     filename = tempfile.mkstemp(suffix='.png')[1]
     visualization.save_matrix(
