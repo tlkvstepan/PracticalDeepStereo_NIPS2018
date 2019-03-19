@@ -136,9 +136,10 @@ class Trainer(object):
             processing_times.append(example['processing_time'])
             self._visualize_test_example(example, example_index)
             th.cuda.empty_cache()
+        average_errors = self._average_errors(validation_errors)
         self._report_test_results(
-            self._average_errors(validation_errors),
-            self._average_processing_time(processing_times))
+            average_errors, self._average_processing_time(processing_times))
+        return average_errors
 
     def train(self):
         """Trains network and returns validation error of last epoch."""
