@@ -15,6 +15,12 @@ from matplotlib import pyplot as plt
 from mpl_toolkits import axes_grid1
 
 
+def gray_to_color(array, colormap_name='jet', vmin=None, vmax=None):
+    cmap = plt.get_cmap('jet')
+    norm = plt.Normalize(vmin, vmax)
+    return cmap(norm(array))
+
+
 def _add_scaled_colorbar(plot, aspect=20, pad_fraction=0.5, **kwargs):
     """Adds scaled colorbar to existing plot."""
     divider = axes_grid1.make_axes_locatable(plot.axes)
@@ -120,8 +126,7 @@ def overlay_image_with_binary_error(color_image, binary_error):
     """
     points_coordinates = th.nonzero(binary_error)
     washed_out_image = color_image // 2 + 128
-    return plot_points_on_background(points_coordinates,
-                                     washed_out_image)
+    return plot_points_on_background(points_coordinates, washed_out_image)
 
 
 class Logger(object):
