@@ -150,7 +150,7 @@ class Logger(object):
 def plot_losses_and_errors(filename,
                            losses,
                            errors,
-                           error_label='Validation error, [%]'):
+                           righ_y_axis_label='Validation error, [%]'):
     """Plots the loss and the error.
 
     The plot has two y-axis: the left is reserved for the loss
@@ -176,7 +176,7 @@ def plot_losses_and_errors(filename,
     smallest_error = min(errors)
     error_label = 'Validation error (smallest {0:.3f})'.format(smallest_error)
     error_plot = error_axis.plot(epochs, errors, 'ro--', label=error_label)[0]
-    error_axis.set_ylabel(error_label, color='red')
+    error_axis.set_ylabel(righ_y_axis_label, color='red')
     error_axis.legend(handles=[loss_plot, error_plot])
     figure.savefig(filename, bbox_inches='tight')
     plt.close()
