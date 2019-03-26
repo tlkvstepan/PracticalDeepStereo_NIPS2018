@@ -61,12 +61,15 @@ class Trainer(object):
         self._learning_rate_scheduler = None
         self._network = None
         self._training_set_loader = None
-        self._validation_set_loader = None
         self._test_set_loader = None
         self._optimizer = None
         self._criterion = None
+        self._current_losses = []
+        self._current_errors = []
+        self._current_processing_times = []
         self._training_losses = []
-        self._validation_errors = []
+        self._test_errors = []
+        self._number_of_examples_to_visualize = 3
         self._from_dictionary(parameters)
 
     def _from_dictionary(self, parameters):
@@ -97,7 +100,7 @@ class Trainer(object):
         parameters = {
             'current_epoch': len(checkpoint['training_losses']),
             'training_losses': checkpoint['training_losses'],
-            'validation_errors': checkpoint['validation_errors']
+            'test_errors': checkpoint['test_errors']
         }
         self._from_dictionary(parameters)
         self._optimizer.load_state_dict(checkpoint['optimizer'])
@@ -108,8 +111,8 @@ class Trainer(object):
         th.save({
             'training_losses':
             self._training_losses,
-            'validation_errors':
-            self._validation_errors,
+            'test_errors':
+            self._test_errors,
             'network':
             self._network.state_dict(),
             'optimizer':
@@ -117,29 +120,6 @@ class Trainer(object):
             'learning_rate_scheduler':
             self._learning_rate_scheduler.state_dict()
         }, self._checkpoint_template.format(self._current_epoch + 1))
-
-    def test(self):
-        """Test network and reports average errors and execution time."""
-        self._initialize_filenames()
-        self._logger = visualization.Logger(self._log_filename)
-        self._network.eval()
-        processing_times = []
-        validation_errors = []
-        self._logger.log("Testing started.")
-        for example_index, example in enumerate(self._test_set_loader):
-            if _is_on_cuda(self._network):
-                example = _move_tensors_to_cuda(example)
-            with th.no_grad():
-                self._run_network_and_measure_time(example)
-            self._compute_error(example)
-            validation_errors.append(example['error'])
-            processing_times.append(example['processing_time'])
-            self._visualize_test_example(example, example_index)
-            th.cuda.empty_cache()
-        average_errors = self._average_errors(validation_errors)
-        self._report_test_results(
-            average_errors, self._average_processing_time(processing_times))
-        return average_errors
 
     def train(self):
         """Trains network and returns validation error of last epoch."""
@@ -151,12 +131,12 @@ class Trainer(object):
         self._logger.log("Training started.")
         for self._current_epoch in range(start_epoch, self._end_epoch):
             self._training_losses.append(self._train_for_epoch())
-            self._validation_errors.append(self._validate())
+            self._test_errors.append(self._test()[0])
             self._report_training_progress()
             self._learning_rate_scheduler.step()
             self._save_checkpoint()
         self._current_epoch = self._end_epoch
-        return self._validation_errors[-1]
+        return self._test_errors[-1]
 
     def _run_network_and_measure_time(self, example):
         if th.cuda.is_available():
@@ -177,8 +157,11 @@ class Trainer(object):
         raise NotImplementedError('"_run_network" method should '
                                   'be implemented in a child class.')
 
-    def _compute_loss(self, batch):
-        """Computes loss and adds it to "batch" as a "loss" item."""
+    def _compute_gradients_wrt_loss(self, batch):
+        """Computes loss, gradients w.r.t loss and saves loss.
+
+        The loss should be saved to "loss" item of "batch".
+        """
         raise NotImplementedError('"_compute_loss" method should '
                                   'be implemented in a child class.')
 
@@ -187,7 +170,7 @@ class Trainer(object):
         raise NotImplementedError('"_compute_error" method should '
                                   'be implemented in a child class.')
 
-    def _visualize_test_example(self, example, example_index):
+    def _visualize_example(self, example, example_index):
         """Visualize result for the example during validation and test.
 
         Args:
@@ -195,20 +178,8 @@ class Trainer(object):
                      the visualization.
             example_index: index of the example.
         """
-        raise NotImplementedError('"_visualize_test_example" method should '
+        raise NotImplementedError('"_visualize_example" method should '
                                   'be implemented in a child class.')
-
-    def _visualize_validation_example(self, example, example_index):
-        """Visualize result for the example during validation and test.
-
-        Args:
-            example: should include network input and output necessary for
-                     the visualization.
-            example_index: index of the example.
-        """
-        raise NotImplementedError(
-            '"_visualize_validation_example" method should '
-            'be implemented in a child class.')
 
     def _average_errors(self, errors):
         """Returns average error."""
@@ -236,7 +207,7 @@ class Trainer(object):
     def _train_for_epoch(self):
         """Returns training set losses."""
         self._network.train()
-        training_losses = []
+        self._current_losses = []
         number_of_batches = len(self._training_set_loader)
         for batch_index, batch in enumerate(self._training_set_loader):
             if _is_logging_required(batch_index, number_of_batches):
@@ -248,21 +219,20 @@ class Trainer(object):
             if _is_on_cuda(self._network):
                 batch = _move_tensors_to_cuda(batch)
             self._run_network(batch)
-            self._compute_loss(batch)
-            loss = batch['loss']
-            loss.backward()
+            self._compute_gradients_wrt_loss(batch)
             self._optimizer.step()
-            training_losses.append(loss.detach().item())
-            del batch, loss
+            self._current_losses.append(batch['loss'])
+            del batch
             th.cuda.empty_cache()
-        return self._average_losses(training_losses)
+        return self._average_losses(self._current_losses)
 
-    def _validate(self):
-        """Returns validation set errors."""
+    def _test(self):
+        """Returns test set errors."""
         self._network.eval()
-        errors = []
-        number_of_examples = len(self._validation_set_loader)
-        for example_index, example in enumerate(self._validation_set_loader):
+        self._current_errors = []
+        self._current_processing_times = []
+        number_of_examples = len(self._test_set_loader)
+        for example_index, example in enumerate(self._test_set_loader):
             if _is_logging_required(example_index, number_of_examples):
                 self._logger.log('epoch: {0:02d} ({1:02d}) : '
                                  'validation: {2:05d} ({3:05d})'.format(
@@ -271,10 +241,20 @@ class Trainer(object):
             if _is_on_cuda(self._network):
                 example = _move_tensors_to_cuda(example)
             with th.no_grad():
-                self._run_network(example)
+                self._run_network_and_measure_time(example)
             self._compute_error(example)
-            errors.append(example['error'])
-            self._visualize_validation_example(example, example_index)
+            self._current_errors.append(example['error'])
+            self._current_processing_times.append(example['processing_time'])
+            self._visualize_example(example, example_index)
             del example
             th.cuda.empty_cache()
-        return self._average_errors(errors)
+        return (self._average_errors(self._current_errors),
+                self._average_processing_time(self._current_processing_times))
+
+    def test(self):
+        """Test network and reports average errors and execution time."""
+        self._initialize_filenames()
+        self._logger = visualization.Logger(self._log_filename)
+        average_errors, average_processing_time = self._test()
+        self._report_test_results(average_errors, average_processing_time)
+        return average_errors, average_processing_time

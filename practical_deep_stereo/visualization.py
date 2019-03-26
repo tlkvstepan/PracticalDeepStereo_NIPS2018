@@ -16,7 +16,7 @@ from mpl_toolkits import axes_grid1
 
 
 def gray_to_color(array, colormap_name='jet', vmin=None, vmax=None):
-    cmap = plt.get_cmap('jet')
+    cmap = plt.get_cmap(colormap_name)
     norm = plt.Normalize(vmin, vmax)
     return cmap(norm(array))
 

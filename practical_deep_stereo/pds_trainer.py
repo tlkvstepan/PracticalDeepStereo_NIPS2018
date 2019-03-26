@@ -13,6 +13,10 @@ from practical_deep_stereo import visualization
 from practical_deep_stereo import trainer
 
 
+def average(list_of_values):
+    return th.Tensor(list_of_values).mean().item()
+
+
 class PdsTrainer(trainer.Trainer):
     def _initialize_filenames(self):
         super(PdsTrainer, self)._initialize_filenames()
@@ -33,10 +37,12 @@ class PdsTrainer(trainer.Trainer):
             batch_or_example['left']['image'],
             batch_or_example['right']['image'])
 
-    def _compute_loss(self, batch):
+    def _compute_gradients_wrt_loss(self, batch):
         # Note that "network_output" contains matching similarity.
-        batch['loss'] = self._criterion(batch['network_output'],
-                                        batch['left']['disparity_image'])
+        loss = self._criterion(batch['network_output'],
+                               batch['left']['disparity_image'])
+        loss.backward()
+        batch['loss'] = loss.detach().item()
 
     def _compute_error(self, example):
         # Note that the "network_output" contains estimated disparity image.
@@ -49,6 +55,12 @@ class PdsTrainer(trainer.Trainer):
             'three_pixels_error': three_pixels_error,
             'mean_absolute_error': mean_absolute_error
         }
+
+    def _average_losses(self, losses):
+        return average(losses)
+
+    def _average_processing_time(self, processing_times):
+        return average(processing_times)
 
     def _average_errors(self, errors):
         average_errors = defaultdict(lambda: [])
@@ -68,54 +80,32 @@ class PdsTrainer(trainer.Trainer):
                              error['mean_absolute_error'],
                              error['three_pixels_error'], time))
 
-    def _average_losses(self, losses):
-        return th.Tensor(losses).mean().item()
-
-    def _average_processing_time(self, processing_times):
-        return th.Tensor(processing_times).mean().item()
-
     def _report_training_progress(self):
         """Plot and print training loss and validation error every epoch."""
-        validation_errors = list(
+        test_errors = list(
             map(lambda element: element['three_pixels_error'],
-                self._validation_errors))
+                self._test_errors))
         visualization.plot_losses_and_errors(
-            self._plot_filename, self._training_losses, validation_errors)
-        self._logger.log(
-            'epoch {0:02d} ({1:02d}) : '
-            'training loss = {2:.5f}, '
-            'MAE = {3:.5f} [pix], '
-            '3PE = {4:.5f} [%], '
-            'learning rate = {5:.5f}.'.format(
-                self._current_epoch + 1, self._end_epoch,
-                self._training_losses[-1],
-                self._validation_errors[-1]['mean_absolute_error'],
-                self._validation_errors[-1]['three_pixels_error'],
-                trainer.get_learning_rate(self._optimizer)))
+            self._plot_filename, self._training_losses, test_errors)
+        self._logger.log('epoch {0:02d} ({1:02d}) : '
+                         'training loss = {2:.5f}, '
+                         'MAE = {3:.5f} [pix], '
+                         '3PE = {4:.5f} [%], '
+                         'learning rate = {5:.5f}.'.format(
+                             self._current_epoch + 1, self._end_epoch,
+                             self._training_losses[-1],
+                             self._test_errors[-1]['mean_absolute_error'],
+                             self._test_errors[-1]['three_pixels_error'],
+                             trainer.get_learning_rate(self._optimizer)))
 
-    def _visualize_test_example(self, example, example_index):
-        """Visualizes test examples.
-
-        Saves estimated and ground truth disparity with similar scale,
-        left image, and binary error map overlayed with the left image for
-        3 examples. For each examples prints errors.
-        """
-        self._visualize_validation_example(example, example_index)
-        self._logger.log('example # {0:05d} ({1:05d}): '
-                         'MAE = {2:.5f} [pix], '
-                         '3PE = {3:.5f} [%], '.format(
-                             example_index + 1, len(self._test_set_loader),
-                             example['error']['mean_absolute_error'],
-                             example['error']['three_pixels_error']))
-
-    def _visualize_validation_example(self, example, example_index):
+    def _visualize_example(self, example, example_index):
         """Visualizes validation examples.
 
         Saves estimated and ground truth disparity with similar scale,
         left image, and binary error map overlayed with the left image for
         3 examples.
         """
-        if example_index <= 3:
+        if example_index <= self._number_of_examples_to_visualize:
             # Dataset loader adds additional singletone dimension at the
             # beggining of tensors.
             ground_truth_disparity_image = example['left']['disparity_image'][
