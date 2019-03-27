@@ -58,7 +58,8 @@ def save_matrix(filename,
                 matrix,
                 minimum_value=None,
                 maximum_value=None,
-                colormap='magma'):
+                colormap='magma',
+                is_colorbar=True):
     """Saves the matrix to the image file.
 
     Args:
@@ -69,16 +70,21 @@ def save_matrix(filename,
                                       Values outside ot the range are
                                       shown in white. The colors of other
                                       values are determined by the colormap.
+                                      If maximum and minimum values are not
+                                      given they are calculated as 0.001 and
+                                      0.999 quantile.
         colormap: map that determines color coding of matrix values.
     """
     figure = plt.figure()
+    noninf_mask = matrix != float('inf')
     if minimum_value is None:
-        minimum_value = matrix.min()
+        minimum_value = np.quantile(matrix[noninf_mask], 0.001)
     if maximum_value is None:
-        maximum_value = matrix[~th.isinf(minimum_value)].max()
+        maximum_value = np.quantile(matrix[noninf_mask], 0.999)
     plot = plt.imshow(
         matrix.numpy(), colormap, vmin=minimum_value, vmax=maximum_value)
-    _add_scaled_colorbar(plot)
+    if is_colorbar:
+        _add_scaled_colorbar(plot)
     plot.axes.get_xaxis().set_visible(False)
     plot.axes.get_yaxis().set_visible(False)
     figure.savefig(filename, bbox_inches='tight', dpi=200)
