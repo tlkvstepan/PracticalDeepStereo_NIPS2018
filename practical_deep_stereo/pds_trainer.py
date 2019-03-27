@@ -21,16 +21,16 @@ class PdsTrainer(trainer.Trainer):
     def _initialize_filenames(self):
         super(PdsTrainer, self)._initialize_filenames()
         self._left_image_template = os.path.join(self._experiment_folder,
-                                                 'example_{0:02d}_image.png')
+                                                 'example_{0:04d}_image.png')
         self._estimated_disparity_image_template = os.path.join(
             self._experiment_folder,
-            'example_{0:02d}_disparity_epoch_{1:03d}.png')
+            'example_{0:04d}_disparity_epoch_{1:03d}.png')
         self._ground_truth_disparity_image_template = os.path.join(
             self._experiment_folder,
-            'example_{0:02d}_disparity_ground_truth.png')
+            'example_{0:04d}_disparity_ground_truth.png')
         self._3_pixels_error_image_template = os.path.join(
             self._experiment_folder,
-            'example_{0:02d}_error_map_epoch_{1:03d}.png')
+            'example_{0:04d}_error_map_epoch_{1:03d}.png')
 
     def _run_network(self, batch_or_example):
         batch_or_example['network_output'] = self._network(
@@ -43,6 +43,7 @@ class PdsTrainer(trainer.Trainer):
                                batch['left']['disparity_image'])
         loss.backward()
         batch['loss'] = loss.detach().item()
+        del loss
 
     def _compute_error(self, example):
         # Note that the "network_output" contains estimated disparity image.
