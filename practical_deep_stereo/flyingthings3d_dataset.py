@@ -363,7 +363,7 @@ class FlyingThings3D(dataset.Dataset):
         examples = _filter_out_examples_with_rendering_artifacts(examples)
         examples = _filter_out_examples_with_large_disparities(
             examples, maximum_disparity)
-        validation_examples = examples[:number_of_validation_examples]
-        training_examples = examples[number_of_validation_examples:]
-        return FlyingThings3D(training_examples), FlyingThings3D(
-            validation_examples)
+        _dataset = FlyingThings3D(examples)
+        validation_dataset, training_dataset = _dataset.split_in_two(
+            size_of_first_subset=number_of_validation_examples)
+        return training_dataset, validation_dataset

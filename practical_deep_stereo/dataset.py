@@ -22,6 +22,18 @@ class Dataset(object):
         self._examples_files = examples_files
         self._transformers = transformers
 
+    def split_in_two(self, size_of_first_subset):
+        """Returns two subset of the dataset.
+
+        Args:
+            size_of_first_subset: number of examples in the
+                                  first subset.
+        """
+        return (self.__class__(self._examples_files[0:size_of_first_subset],
+                               self._transformers),
+                self.__class__(self._examples_files[size_of_first_subset:],
+                               self._transformers))
+
     def append_transformers(self, transformers):
         """Adds transformers to the dataset.
 

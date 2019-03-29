@@ -136,10 +136,10 @@ class Kitti(dataset.Dataset):
         # This garantee that splits will be same in a different runs.
         random.seed(0)
         random.shuffle(examples)
-        validation_examples = examples[0:number_of_validation_examples]
-        training_examples = examples[number_of_validation_examples:]
-
-        return Kitti(training_examples), Kitti(validation_examples)
+        _dataset = Kitti(examples)
+        validation_dataset, training_dataset = _dataset.split_in_two(
+            size_of_first_subset=number_of_validation_examples)
+        return training_dataset, validation_dataset
 
     @classmethod
     def kitti2015_benchmark(cls, dataset_folder):
