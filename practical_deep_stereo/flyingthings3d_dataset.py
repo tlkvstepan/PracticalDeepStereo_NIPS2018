@@ -11,6 +11,7 @@ import numpy as np
 import torch as th
 
 from practical_deep_stereo import dataset
+from practical_deep_stereo import transformers
 
 # The list below contains training examples with rendering artifacts.
 # These images were found by visual inspection of images with largest
@@ -328,6 +329,28 @@ class FlyingThings3D(dataset.Dataset):
         examples = _filter_out_examples_with_too_many_large_disparities(
             examples, maximum_percentage_of_large_disparities, large_disparity)
         return FlyingThings3D(examples, transformers)
+
+    @classmethod
+    def small_training_split(cls,
+                             dataset_folder,
+                             maximum_disparity=127,
+                             number_of_validation_examples=300,
+                             number_of_training_examples=3000,
+                             height=256,
+                             width=256):
+        """Returns small training and validation datasets for tuning."""
+        training_dataset, validation_dataset = cls.training_split(
+            dataset_folder=dataset_folder,
+            number_of_validation_examples=number_of_validation_examples,
+            maximum_disparity=maximum_disparity)
+        training_dataset = training_dataset.split_in_two(
+            number_of_training_examples)[0]
+        transformers_list = [transformers.CentralCrop(
+            height=height, width=width, get_items_to_crop=lambda x: [x['left']['image'],
+        x['right']['image'], x['left']['disparity_image']])]
+        training_dataset.append_transformers(transformers_list)
+        validation_dataset.append_transformers(transformers_list)
+        return training_dataset, validation_dataset
 
     @classmethod
     def training_split(cls,
