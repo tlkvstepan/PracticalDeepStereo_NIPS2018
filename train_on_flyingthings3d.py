@@ -45,7 +45,7 @@ from torch.utils import data
 from practical_deep_stereo import flyingthings3d_dataset
 from practical_deep_stereo import loss
 from practical_deep_stereo import network
-from practical_deep_stereo import trainer
+from practical_deep_stereo import pds_trainer
 
 
 def _initialize_parameters(dataset_folder, experiment_folder):
@@ -64,7 +64,7 @@ def _initialize_parameters(dataset_folder, experiment_folder):
         shuffle=False,
         num_workers=3,
         pin_memory=True)
-    pds_network = network.PdsNetwork().default().cuda()
+    pds_network = network.PdsNetwork.default().cuda()
     optimizer = optim.RMSprop(pds_network.parameters(), lr=1e-2)
     # Learning rate is 1e-2 for first 120k iterations, and than
     # is halfed every 20k iterations.
@@ -77,7 +77,7 @@ def _initialize_parameters(dataset_folder, experiment_folder):
         'criterion': criterion,
         'learning_rate_scheduler': learning_rate_scheduler,
         'training_set_loader': training_set_loader,
-        'validation_set_loader': validation_set_loader,
+        'test_set_loader': validation_set_loader,
         'end_epoch': 10,
         'experiment_folder': experiment_folder
     }
@@ -99,12 +99,12 @@ def train_on_flyingthings3d(dataset_folder, experiment_folder,
     experiment_folder = os.path.abspath(experiment_folder)
     if not os.path.isdir(experiment_folder):
         os.mkdir(experiment_folder)
-    pds_trainer = trainer.PdsTrainer(
+    trainer = pds_trainer.PdsTrainer(
         _initialize_parameters(dataset_folder, experiment_folder))
     if checkpoint_file is not None:
         checkpoint_file = os.path.abspath(checkpoint_file)
         pds_trainer.load_checkpoint(checkpoint_file)
-    pds_trainer.train()
+    trainer.train()
 
 
 if __name__ == '__main__':
