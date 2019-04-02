@@ -70,9 +70,9 @@ class Trainer(object):
         self._training_losses = []
         self._test_errors = []
         self._number_of_examples_to_visualize = 3
-        self._from_dictionary(parameters)
+        self.from_dictionary(parameters)
 
-    def _from_dictionary(self, parameters):
+    def from_dictionary(self, parameters):
         attributes = vars(self)
         for key, value in parameters.items():
             _key = '_{0}'.format(key)
@@ -102,7 +102,7 @@ class Trainer(object):
             'training_losses': checkpoint['training_losses'],
             'test_errors': checkpoint['test_errors']
         }
-        self._from_dictionary(parameters)
+        self.from_dictionary(parameters)
         self._optimizer.load_state_dict(checkpoint['optimizer'])
         self._learning_rate_scheduler.load_state_dict(
             checkpoint['learning_rate_scheduler'])
